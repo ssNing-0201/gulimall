@@ -16,7 +16,7 @@ import javax.validation.constraints.*;
 
 
 /**
- * Ʒ?
+ * 品牌
  *
  * @author Ning
  * @email sszhangningwowow@gmail.com
