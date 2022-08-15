@@ -16,6 +16,6 @@ gulimall-common/gulimall-common.iml
 
 **/.mvn
 **/target/
-
+gulimail-product/README.text
 .idea
 **/.gitignore
