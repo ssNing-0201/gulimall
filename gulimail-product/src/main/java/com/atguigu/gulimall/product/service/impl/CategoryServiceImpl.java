@@ -1,5 +1,6 @@
 package com.atguigu.gulimall.product.service.impl;
 
+import com.atguigu.gulimall.product.service.CategoryBrandRelationService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -21,6 +22,9 @@ import javax.annotation.Resource;
 @Slf4j
 @Service("categoryService")
 public class CategoryServiceImpl extends ServiceImpl<CategoryDao, CategoryEntity> implements CategoryService {
+
+    @Resource
+    private CategoryBrandRelationService categoryBrandRelationService;
 
     // 可以用baseMapper 范型指定了的
 //    @Resource
@@ -68,6 +72,16 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryDao, CategoryEntity
         Collections.reverse(parentPath);
         log.info("impl内容{}", Arrays.asList(parentPath.toArray(new Long[0])));
         return parentPath.toArray(new Long[0]);
+    }
+
+    /**
+     * 级联跟新所有关联数据
+     * @param category
+     */
+    @Override
+    public void updateCasecade(CategoryEntity category) {
+        this.updateById(category);
+        categoryBrandRelationService.updateCategory(category.getCatId(),category.getName());
     }
 
     private List<Long> findParentPath(Long catelogId, List<Long> paths) {
