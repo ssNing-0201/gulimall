@@ -37,18 +37,31 @@ public class AttrGroupController {
     @Resource
     private AttrService attrService;
 
+    // 查询分组关联属性
     @GetMapping("/{attrgroupId}/attr/relation")
-    public R attrRekation(@PathVariable("attrgroupId") Long attrgroupId) {
+    public R attrRekation(@RequestParam Map<String, Object> params,
+                          @PathVariable("attrgroupId") Long attrgroupId) {
         List<AttrEntity> entities = attrService.getRelaitionAttr(attrgroupId);
 
-        return R.ok().put("data",entities);
+        return R.ok().put("data", entities);
     }
 
+    // 查询没有关联的分组属性
+    @GetMapping("/{attrgroupId}/noattr/relation")
+    public R attrNoRelation(@RequestParam Map<String, Object> params,
+                            @PathVariable("attrgroupId") Long attrgroupId) {
+        PageUtils page = attrService.getNoRelationAttr(params,attrgroupId);
+
+        return R.ok().put("page", page);
+    }
+
+    // 删除分组关联属性
     @PostMapping("/attr/relation/delete")
-    public R deleteRelation(@RequestBody AttrGroupRelationVo[] vos){
+    public R deleteRelation(@RequestBody AttrGroupRelationVo[] vos) {
         attrService.deleteRelation(vos);
         return R.ok();
     }
+
 
     /**
      * 列表
