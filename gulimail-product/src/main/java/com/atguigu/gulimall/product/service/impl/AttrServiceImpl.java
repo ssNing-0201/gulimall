@@ -66,7 +66,7 @@ public class AttrServiceImpl extends ServiceImpl<AttrDao, AttrEntity> implements
         BeanUtils.copyProperties(attr, attrEntity);
         this.save(attrEntity);
         // 保存关联关系
-        if (attr.getAttrType() == ProductConstant.AttrEnum.ATTR_TYPE_BASE.getCode()) {
+        if (attr.getAttrType() == ProductConstant.AttrEnum.ATTR_TYPE_BASE.getCode() && attr.getAttrGroupId() != null) {
             AttrAttrgroupRelationEntity attrAttrgroupRelationEntity = new AttrAttrgroupRelationEntity();
             attrAttrgroupRelationEntity.setAttrGroupId(attr.getAttrGroupId());
             attrAttrgroupRelationEntity.setAttrId(attrEntity.getAttrId());
@@ -102,7 +102,7 @@ public class AttrServiceImpl extends ServiceImpl<AttrDao, AttrEntity> implements
             // 设置分类和分组的名字
             if ("base".equalsIgnoreCase(type)) {
                 AttrAttrgroupRelationEntity attrId = attrAttrgroupRelationDao.selectOne(new QueryWrapper<AttrAttrgroupRelationEntity>().eq("attr_id", attrEntity.getAttrId()));
-                if (attrId != null) {
+                if (attrId != null && attrId.getAttrGroupId() != null) {
                     AttrGroupEntity group = attrGroupDao.selectById(attrId.getAttrGroupId());
                     attrRespVo.setGroupName(group.getAttrGroupName());
                 }
@@ -168,6 +168,7 @@ public class AttrServiceImpl extends ServiceImpl<AttrDao, AttrEntity> implements
 
     /**
      * 根据分组id查找关联的所有基本属性
+     *
      * @param attrgroupId
      * @return
      */
@@ -178,7 +179,7 @@ public class AttrServiceImpl extends ServiceImpl<AttrDao, AttrEntity> implements
         List<Long> attrIds = entities.stream().map((attr) -> {
             return attr.getAttrId();
         }).collect(Collectors.toList());
-        if(attrIds==null || attrIds.size()==0){
+        if (attrIds == null || attrIds.size() == 0) {
             return null;
         }
         List<AttrEntity> attrEntities = this.listByIds(attrIds);
@@ -200,6 +201,7 @@ public class AttrServiceImpl extends ServiceImpl<AttrDao, AttrEntity> implements
 
     /**
      * 获取当前分组没有关连的所有属性
+     *
      * @param params
      * @param attrgroupId
      * @return
@@ -219,14 +221,14 @@ public class AttrServiceImpl extends ServiceImpl<AttrDao, AttrEntity> implements
         List<Long> attrIds = groupId.stream().map((item) -> {
             return item.getAttrId();
         }).collect(Collectors.toList());
-        QueryWrapper<AttrEntity> wrapper = new QueryWrapper<AttrEntity>().eq("catelog_id", catelogId).eq("attr_type",ProductConstant.AttrEnum.ATTR_TYPE_BASE.getCode());
-        if (attrIds!=null && attrIds.size()>0){
+        QueryWrapper<AttrEntity> wrapper = new QueryWrapper<AttrEntity>().eq("catelog_id", catelogId).eq("attr_type", ProductConstant.AttrEnum.ATTR_TYPE_BASE.getCode());
+        if (attrIds != null && attrIds.size() > 0) {
             wrapper.notIn("attr_id", attrIds);
         }
         String key = (String) params.get("key");
-        if (!StringUtils.isNullOrEmpty(key)){
-            wrapper.and((w)->{
-                w.eq("attr_id",key).or().like("attr_name",key);
+        if (!StringUtils.isNullOrEmpty(key)) {
+            wrapper.and((w) -> {
+                w.eq("attr_id", key).or().like("attr_name", key);
             });
         }
         IPage<AttrEntity> page = this.page(new Query<AttrEntity>().getPage(params), wrapper);
