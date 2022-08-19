@@ -21,7 +21,7 @@ public class AttrGroupEntity implements Serializable {
 	private static final long serialVersionUID = 1L;
 
 	/**
-	 * ????id
+	 * 分组id
 	 */
 	@TableId
 	private Long attrGroupId;

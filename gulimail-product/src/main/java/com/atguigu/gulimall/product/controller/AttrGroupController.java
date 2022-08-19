@@ -10,6 +10,7 @@ import com.atguigu.gulimall.product.service.AttrAttrgroupRelationService;
 import com.atguigu.gulimall.product.service.AttrService;
 import com.atguigu.gulimall.product.service.CategoryService;
 import com.atguigu.gulimall.product.vo.AttrGroupRelationVo;
+import com.atguigu.gulimall.product.vo.AttrGroupWithAttrsVo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -43,9 +44,17 @@ public class AttrGroupController {
 
     //新增关联关系
     @PostMapping("/attr/relation")
-    public R addRelation(@RequestBody List<AttrGroupRelationVo> vos){
+    public R addRelation(@RequestBody List<AttrGroupRelationVo> vos) {
         relationService.saveBatch(vos);
         return R.ok();
+    }
+
+    // 获取当前分类属性下所有分组
+    @GetMapping("/{catelogId}/withattr")
+    public R getAttrGroupWithAttrs(@PathVariable("catelogId") Long catelogId) {
+        List<AttrGroupWithAttrsVo> vos = attrGroupService.getAttrGroupWithAttrsByCatelogId(catelogId);
+
+        return R.ok().put("data",vos);
     }
 
     // 查询分组关联属性
@@ -61,7 +70,7 @@ public class AttrGroupController {
     @GetMapping("/{attrgroupId}/noattr/relation")
     public R attrNoRelation(@RequestParam Map<String, Object> params,
                             @PathVariable("attrgroupId") Long attrgroupId) {
-        PageUtils page = attrService.getNoRelationAttr(params,attrgroupId);
+        PageUtils page = attrService.getNoRelationAttr(params, attrgroupId);
 
         return R.ok().put("page", page);
     }
