@@ -16,7 +16,7 @@ import java.util.Map;
 /**
  * 集中处理所有异常
  */
-@Slf4j
+/*@Slf4j
 @RestControllerAdvice(basePackages = "com.atguigu.gulimall.product.controller")
 public class GulimallExceptionControllerAdvice {
 
@@ -37,4 +37,4 @@ public class GulimallExceptionControllerAdvice {
         return R.error(BizCodeEnum.UNKNOW_EXCEPTION.getCode(),BizCodeEnum.UNKNOW_EXCEPTION.getMsg());
     }
 
-}
+}*/
