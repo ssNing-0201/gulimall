@@ -59,6 +59,10 @@ public class SpuInfoServiceImpl extends ServiceImpl<SpuInfoDao, SpuInfoEntity> i
         return new PageUtils(page);
     }
 
+    /**
+     * //TODO 剩余部分在高级部分完善
+     * @param vo
+     */
     @Transactional
     @Override
     public void saveSpuInfo(SpuSaveVo vo) {
@@ -121,7 +125,6 @@ public class SpuInfoServiceImpl extends ServiceImpl<SpuInfoDao, SpuInfoEntity> i
 
                 Long skuId = skuInfoEntity.getSkuId();
                 // 保存sku图片信息 pms_sku_images
-                //TODO 没有图片路径的的无需保存
                 List<SkuImagesEntity> imagesEntities = item.getImages().stream().map(img -> {
                     SkuImagesEntity skuImagesEntity = new SkuImagesEntity();
                     skuImagesEntity.setSkuId(skuId);
@@ -160,6 +163,38 @@ public class SpuInfoServiceImpl extends ServiceImpl<SpuInfoDao, SpuInfoEntity> i
     @Override
     public void saveBaseSouInfo(SpuInfoEntity spuInfoEntity) {
         this.baseMapper.insert(spuInfoEntity);
+    }
+
+    @Override
+    public PageUtils queryPageByCondition(Map<String, Object> params) {
+
+        QueryWrapper<SpuInfoEntity> wrapper = new QueryWrapper<SpuInfoEntity>();
+
+        String key = (String) params.get("key");
+        if (!StringUtils.isNullOrEmpty(key)){
+            wrapper.and((w)->{
+                w.eq("id",params.get("key")).or().like("spu_name",params.get("key"));
+            });
+        }
+        String status = (String) params.get("status");
+        if (!StringUtils.isNullOrEmpty(status)){
+            wrapper.eq("publish_status",params.get("status"));
+        }
+        String brandId = (String) params.get("brandId");
+        if (!StringUtils.isNullOrEmpty(brandId)){
+            wrapper.eq("brand_id",params.get("brandId"));
+        }
+        String catelogId = (String) params.get("catelogId");
+        if (!StringUtils.isNullOrEmpty(catelogId)){
+            wrapper.eq("catalog_id",params.get("catelogId"));
+        }
+
+        IPage<SpuInfoEntity> page = this.page(
+                new Query<SpuInfoEntity>().getPage(params),
+                wrapper
+        );
+
+        return new PageUtils(page);
     }
 
 

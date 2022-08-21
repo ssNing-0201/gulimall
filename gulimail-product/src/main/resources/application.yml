@@ -15,6 +15,9 @@ spring:
         server-addr: 127.0.0.1:8848
   main:
     allow-circular-references: true
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: GMT-8
 
 
 mybatis-plus:
@@ -26,4 +29,6 @@ mybatis-plus:
       logic-not-delete-value: 0
 logging:
   level:
-    com.atguigu.gulimall: TRACE
+    com.atguigu.gulimall: debug
+
+
