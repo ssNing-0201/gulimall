@@ -1,0 +1,6 @@
+server:
+  port: 3090
+
+spring:
+  application:
+    name: gulimall-search
