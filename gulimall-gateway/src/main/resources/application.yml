@@ -15,6 +15,13 @@ spring:
 #          uri: https://www.qq.com
 #          predicates:
 #            - Query=url,qq
+        - id: search_route
+          uri: lb://gulimall-search
+          predicates:
+            - Path=/api/search
+          filters:
+            - RewritePath=/api/(?<segment>.*),/$\{segment}
+
         - id: ware_route
           uri: lb://gulimall-ware
           predicates:
