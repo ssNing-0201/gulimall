@@ -18,6 +18,9 @@ spring:
   jackson:
     date-format: yyyy-MM-dd HH:mm:ss
     time-zone: GMT-8
+  thymeleaf:
+    cache: false # 关闭thymeleaf缓存，开发期间可实时看到效果
+
 
 
 mybatis-plus:
@@ -30,5 +33,6 @@ mybatis-plus:
 logging:
   level:
     com.atguigu.gulimall: debug
+
 
 
