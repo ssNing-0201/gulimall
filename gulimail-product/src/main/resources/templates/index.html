@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 
 <head>
   <meta charset="UTF-8">
@@ -201,7 +201,10 @@
       <div class="header_banner">
         <div class="header_main_left">
           <ul>
-            <li>
+            <li th:each="category :${categorys}">
+              <a href="#" class="header_main_left_a"  th:attr="ctg-data=${category.catId}"><b th:text="${category.name}"></b></a>
+            </li>
+            <!--<li>
               <a href="#" class="header_main_left_a" ctg-data="3"><b>家用电器</b></a>
             </li>
             <li class="header_li2">
@@ -259,7 +262,7 @@
             <li class="header_li2">
               <a href="#" class="header_main_left_a" ctg-data="19"><b>彩票</b> / <b>酒店</b> / <b>旅游</b> / <b>生活</b></a>
 
-            </li>
+            </li>-->
 
           </ul>
 
