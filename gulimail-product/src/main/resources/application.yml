@@ -20,6 +20,9 @@ spring:
     time-zone: GMT-8
   thymeleaf:
     cache: false # 关闭thymeleaf缓存，开发期间可实时看到效果
+  # 配置redis缓存
+  redis:
+    host: 127.0.0.1
 
 
 
