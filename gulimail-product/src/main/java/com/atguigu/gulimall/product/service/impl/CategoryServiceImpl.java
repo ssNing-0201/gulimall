@@ -6,6 +6,9 @@ import com.atguigu.gulimall.product.service.CategoryBrandRelationService;
 import com.atguigu.gulimall.product.vo.CateLog2Vo;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.Nullable;
+import org.redisson.api.RLock;
+import org.redisson.api.RedissonClient;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Service;
@@ -23,7 +26,6 @@ import com.atguigu.common.utils.Query;
 import com.atguigu.gulimall.product.dao.CategoryDao;
 import com.atguigu.gulimall.product.entity.CategoryEntity;
 import com.atguigu.gulimall.product.service.CategoryService;
-import org.springframework.util.StringUtils;
 
 
 import javax.annotation.Resource;
@@ -36,6 +38,8 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryDao, CategoryEntity
     private CategoryBrandRelationService categoryBrandRelationService;
     @Resource
     private StringRedisTemplate stringRedisTemplate;
+    @Resource
+    private RedissonClient redisson;
 
 
     // 可以用baseMapper 范型指定了的
@@ -108,7 +112,8 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryDao, CategoryEntity
     // TODO 产生堆外内存溢出：OutofdirectMemoryError
     // 溢出原因
     @Override
-    public Map<String, List<CateLog2Vo>> getCatelogJson() throws InterruptedException {
+    @Cacheable(value = "catelog")  // 表示当前方法需要缓存，如果缓存中没有会调用方法，最后将方法的结果放入缓存
+    public Map<String, List<CateLog2Vo>> getCatelogJson() {
         // 缓存放入JSON字符串，用时还需逆转为能用的对象「序列化与反序列化」
         // 优化 引入缓存，将三级分类放入缓存中。
 
@@ -120,7 +125,7 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryDao, CategoryEntity
         String catalogJSON = stringRedisTemplate.opsForValue().get("catalogJSON");
         if ("null".equals(catalogJSON) || "".equals(catalogJSON)) {
             // 缓存中没有，查询数据库
-            Map<String, List<CateLog2Vo>> catelogJsonFromDb = getCatelogJsonFromDbWithRedisLock();
+            Map<String, List<CateLog2Vo>> catelogJsonFromDb = getCatelogJsonFromDbWithRedissonLock();
             // 将查到的数据再放入缓存，将对象转为json放在缓存中。
             // 将以下语句移动到数据库查询方法中，查完数据库直接保存在缓存中。
             /*String s = JSON.toJSONString(catelogJsonFromDb);
@@ -132,6 +137,25 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryDao, CategoryEntity
         });
 
         return result;
+
+    }
+
+    // 从数据库查询并分装分类数据(redisson锁)
+    public Map<String, List<CateLog2Vo>> getCatelogJsonFromDbWithRedissonLock() {
+        /**
+         * 优化 使用分布式锁Redisson
+         * 1、将数据库的多次查询变为一次
+         */
+        // 获取分布式锁(锁的名字是去redis占坑的，锁的粒度越细，越快)
+        RLock lock = redisson.getLock("catelogJSON-lock");
+        lock.lock(); // 上锁
+        Map<String, List<CateLog2Vo>> dataFromDb;
+        try {
+            dataFromDb = getDataFromDb();
+        } finally {
+            lock.unlock(); // 解锁
+        }
+        return dataFromDb;
 
     }
 
@@ -185,21 +209,21 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryDao, CategoryEntity
 
         // 1、占分布式锁,去redis占位,同时设置过期时间，防止突然出现的问题导致死锁。
         String id = UUID.randomUUID().toString();
-        Boolean lock = stringRedisTemplate.opsForValue().setIfAbsent("lock", id,30,TimeUnit.SECONDS);
-        if (lock){
+        Boolean lock = stringRedisTemplate.opsForValue().setIfAbsent("lock", id, 30, TimeUnit.SECONDS);
+        if (lock) {
             // 占位成功,执行业务
             Map<String, List<CateLog2Vo>> dataFromDb;
             try {
                 dataFromDb = getDataFromDb();
-            }finally {
+            } finally {
                 String lockValue = stringRedisTemplate.opsForValue().get("lock");
             /*if (id.equals(lockValue)){
                 stringRedisTemplate.delete("lock"); // 删除锁
             }*/
-                stringRedisTemplate.execute(new DefaultRedisScript<Integer>(),Arrays.asList("lock"),id);
+                stringRedisTemplate.execute(new DefaultRedisScript<Long>(), Arrays.asList("lock"), id);
             }
             return dataFromDb;
-        }else {
+        } else {
             // 占位失败，重试
             // 休眠100ms重试
             Thread.sleep(100);

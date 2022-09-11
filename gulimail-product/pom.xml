@@ -30,6 +30,20 @@
             <version>1.2.79</version>
         </dependency>
 
+        <!--整合分布式缓存 cache-->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-cache</artifactId>
+        </dependency>
+
+
+        <!--加入redisson分布式锁依赖-->
+        <dependency>
+            <groupId>org.redisson</groupId>
+            <artifactId>redisson-spring-boot-starter</artifactId>
+            <version>3.17.5</version>
+        </dependency>
+
         <!--springboot 整合redis -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
