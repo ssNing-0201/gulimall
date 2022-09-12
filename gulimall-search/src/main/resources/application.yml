@@ -4,7 +4,13 @@ server:
 spring:
   application:
     name: gulimall-search
+
+  thymeleaf:
+    cache: false # 关闭 thymeleaf 缓存（编写时关闭，实时显示效果，部署时打开提升运行效率）
+
+
   cloud:
     nacos:
       discovery:
         server-addr: 127.0.0.1:8848
+

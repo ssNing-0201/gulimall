@@ -60,8 +60,14 @@ spring:
         - id: gulimall_host_route
           uri: lb://gulimail-product
           predicates:
-            - Host=**.gulimall.com,gulimall.com
+            - Host=gulimall.com
 
+        - id: gulimall_search_route
+          uri: lb://gulimall-search
+          predicates:
+              - Host=search.gulimall.com
+
+#         启动失败，注意缩进！！！
 #        - id: produce_route
 #          uri: lb://gulimail-product
 #          predicates:
