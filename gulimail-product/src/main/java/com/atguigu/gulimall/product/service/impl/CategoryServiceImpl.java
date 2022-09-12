@@ -8,7 +8,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.Nullable;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Service;
@@ -26,6 +28,7 @@ import com.atguigu.common.utils.Query;
 import com.atguigu.gulimall.product.dao.CategoryDao;
 import com.atguigu.gulimall.product.entity.CategoryEntity;
 import com.atguigu.gulimall.product.service.CategoryService;
+import org.springframework.transaction.annotation.Transactional;
 
 
 import javax.annotation.Resource;
@@ -95,12 +98,20 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryDao, CategoryEntity
      *
      * @param category
      */
+    // @CacheEvict(value = "category",key = "'getLevel1Categorys'")// 失效模式（有更新，删除缓存）
+    // 要同时删除掉两个缓存数据，用 @Caching
+    // 实现以上目的第二种方法：@CacheEvict(value = "category",allEntries = true) 意思是删除"category"分区下所有缓存
+    @Caching(evict = {
+            @CacheEvict(value = "category",key = "'getLevel1Categorys'"),
+            @CacheEvict(value = "category",key = "'getCatelogJson'")
+    })
+    @Transactional
     @Override
     public void updateCasecade(CategoryEntity category) {
         this.updateById(category);
         categoryBrandRelationService.updateCategory(category.getCatId(), category.getName());
     }
-
+    @Cacheable(value = "category",key = "#root.methodName")
     @Override
     public List<CategoryEntity> getLevel1Categorys() {
         List<CategoryEntity> categoryEntities = baseMapper.selectList(new QueryWrapper<CategoryEntity>().eq("parent_cid", 0));
@@ -108,12 +119,46 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryDao, CategoryEntity
         return categoryEntities;
     }
 
+    // 最终版本，使用缓存注解来解决缓存问题
+    @Cacheable(value = "category",key = "#root.methodName")
+    @Override
+    public Map<String, List<CateLog2Vo>> getCatelogJson(){
+        List<CategoryEntity> selectList = baseMapper.selectList(null);
+        // 1、查出所有分类
+        List<CategoryEntity> level1Categorys = getParent_cid(selectList, 0l);
+        // 2、封装数据
+        Map<String, List<CateLog2Vo>> parent_cid = level1Categorys.stream().collect(Collectors.toMap(k -> k.getCatId().toString()
+                , v -> {
+                    // 每一个的一级分类，查出这个一级分类的二级分类
+                    List<CategoryEntity> categoryEntities = getParent_cid(selectList, v.getCatId());
+                    // 封装上面的结果
+                    List<CateLog2Vo> cateLog2Vos = null;
+                    if (categoryEntities != null) {
+                        cateLog2Vos = categoryEntities.stream().map(l2 -> {
+                            CateLog2Vo cateLog2Vo = new CateLog2Vo(v.getCatId().toString(), null, l2.getCatId().toString(), l2.getName());
+                            // 给二级分类查找三级分类
+                            List<CategoryEntity> level3Catelog = getParent_cid(selectList, l2.getCatId());
+                            if (level3Catelog != null) {
+                                List<CateLog2Vo.CataLog3Vo> collect = level3Catelog.stream().map(l3 -> {
+                                    // 分装成指定格式
+                                    CateLog2Vo.CataLog3Vo cataLog3Vo = new CateLog2Vo.CataLog3Vo(l2.getCatId().toString(), l3.getCatId().toString(), l3.getName());
+                                    return cataLog3Vo;
+                                }).collect(Collectors.toList());
+                                cateLog2Vo.setCatalog3List(collect);
+                            }
+                            return cateLog2Vo;
+                        }).collect(Collectors.toList());
+                    }
+                    return cateLog2Vos;
+                }));
+        return parent_cid;
+    }
+
 
     // TODO 产生堆外内存溢出：OutofdirectMemoryError
     // 溢出原因
-    @Override
-    @Cacheable(value = "catelog")  // 表示当前方法需要缓存，如果缓存中没有会调用方法，最后将方法的结果放入缓存
-    public Map<String, List<CateLog2Vo>> getCatelogJson() {
+    @Cacheable(value = "catelog",key = "'getcatelog'")  // 表示当前方法需要缓存，如果缓存中没有会调用方法，最后将方法的结果放入缓存
+    public Map<String, List<CateLog2Vo>> getCatelogJsonOld() {
         // 缓存放入JSON字符串，用时还需逆转为能用的对象「序列化与反序列化」
         // 优化 引入缓存，将三级分类放入缓存中。
 
