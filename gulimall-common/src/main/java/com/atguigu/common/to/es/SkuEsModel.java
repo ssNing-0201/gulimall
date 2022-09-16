@@ -29,7 +29,7 @@ public class SkuEsModel {
 
     private Long brandId;
 
-    private Long cataLogId;
+    private Long catalogId;
 
     private String brandName;
 

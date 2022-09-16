@@ -240,7 +240,6 @@ public class SpuInfoServiceImpl extends ServiceImpl<SpuInfoDao, SpuInfoEntity> i
         try {
             List<SkuHasStockVo> skusHasStock = wareFeignService.getSkusHasStock(skuIdList);
             stockMap = skusHasStock.stream().collect(Collectors.toMap(SkuHasStockVo::getSkuId, item -> item.getHasStock()));
-
         } catch (Exception e) {
             log.info("库存服务查询异常！原因:{}",e);
         }
@@ -268,7 +267,7 @@ public class SpuInfoServiceImpl extends ServiceImpl<SpuInfoDao, SpuInfoEntity> i
 
             esModel.setBrandName(brand.getName());
             esModel.setBrandImg(brand.getLogo());
-            CategoryEntity category = categoryService.getById(esModel.getCataLogId());
+            CategoryEntity category = categoryService.getById(esModel.getCatalogId());
             esModel.setCatalogName(category.getName());
 
             // 设置检索属性

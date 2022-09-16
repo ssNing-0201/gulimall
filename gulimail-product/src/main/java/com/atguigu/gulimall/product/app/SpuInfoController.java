@@ -32,6 +32,12 @@ public class SpuInfoController {
         spuInfoService.up(spuid);
         return R.ok();
     }
+    // 自己写的将商品数据放入es的接口
+    @PostMapping("/{spuid}/esup")
+    public R esUp(@PathVariable("spuid") Long spuid){
+        spuInfoService.up(spuid);
+        return R.ok();
+    }
 
     /**
      * 列表
