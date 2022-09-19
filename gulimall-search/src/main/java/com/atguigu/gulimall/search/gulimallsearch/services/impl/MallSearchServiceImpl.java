@@ -32,6 +32,7 @@ public class MallSearchServiceImpl implements MallSearchService {
     @Resource
     private ElasticsearchClient client;
 
+
     @Override
     public SearchResult search(SearchParam param) {
 
@@ -72,16 +73,19 @@ public class MallSearchServiceImpl implements MallSearchService {
         /**
          * 查询
          */
-        BoolQuery boolQuery = new BoolQuery.Builder().build();
+        SearchRequest.Builder searchRequestBuild = new SearchRequest.Builder();
+        searchRequestBuild.index(EsConstant.PRODUCT_INDEX);
+        BoolQuery.Builder builder = new BoolQuery.Builder();
         // 1、must模糊查询
+
         if (!StringUtils.isNullOrEmpty(param.getKeyword())) {
             Query byName = MatchQuery.of(m -> m.field("skuTitle").query(param.getKeyword()))._toQuery();
-            boolQuery.must().add(byName);
+            builder.must(byName);
         }
         // 2、bool - filter -按照三级分类id查询
         if (param.getCatalog3Id() != null) {
             Query byCatalog3Id = TermQuery.of(t -> t.field("catalogId").value(param.getCatalog3Id()))._toQuery();
-            boolQuery.filter().add(byCatalog3Id);
+            builder.filter(byCatalog3Id);
         }
         // 2、bool - filter -按照品牌id查询
         if (param.getBrandId() != null && param.getBrandId().size() > 0) {
@@ -91,7 +95,7 @@ public class MallSearchServiceImpl implements MallSearchService {
             }
             TermsQueryField termsQueryField = new TermsQueryField.Builder().value(fieldValues).build();
             Query byBrandId = TermsQuery.of(t -> t.field("brandId").terms(termsQueryField))._toQuery();
-            boolQuery.filter().add(byBrandId);
+            builder.filter(byBrandId);
         }
         // 3、bool - filter -按照指定属性查询
         if (param.getAttrs() != null && param.getAttrs().size() > 0) {
@@ -107,13 +111,13 @@ public class MallSearchServiceImpl implements MallSearchService {
                 TermsQueryField termsQueryField = new TermsQueryField.Builder().value(fieldValues).build();
                 String finalAttrId = attrId;
                 Query byAttrs = NestedQuery.of(n -> n.path("attrs").query(q -> q.bool(b -> b.must(m -> m.term(t -> t.field("attrs.attrID").value(finalAttrId))).must(m -> m.terms(t -> t.field("attrs.attrValue").terms(termsQueryField))))).scoreMode(null))._toQuery();
-                boolQuery.filter().add(byAttrs);
+                builder.filter(byAttrs);
             }
 
         }
         // 4、bool - filter -按照是否有库存查询
         Query byHasStock = TermQuery.of(t -> t.field("hasStock").value(param.getHasStock()==1))._toQuery();
-        boolQuery.filter().add(byHasStock);
+        builder.filter(byHasStock);
 
         // 5、bool - filter -按照价格区间查询查询
         if (!StringUtils.isNullOrEmpty(param.getSkuPrice())) {
@@ -122,38 +126,42 @@ public class MallSearchServiceImpl implements MallSearchService {
                 JsonString min = Json.createValue(s[0] == "" ? "0" : s[0]);
                 JsonString max = Json.createValue(s[1]);
                 Query bySkuPrice = RangeQuery.of(r -> r.field("skuPrice").gte((JsonData) min).lte((JsonData) max))._toQuery();
-                boolQuery.filter().add(bySkuPrice);
+                builder.filter(bySkuPrice);
             } else {
                 if (!param.getSkuPrice().startsWith("_")) {
                     JsonString min = Json.createValue(s[0]);
                     Query bySkuPrice = RangeQuery.of(r -> r.field("skuPrice").gte((JsonData) min))._toQuery();
-                    boolQuery.filter().add(bySkuPrice);
+                    builder.filter(bySkuPrice);
                 }
             }
         }
 
         // 将之前的查询条件整合一起去查询
-        Query query = new Query.Builder().bool(boolQuery).build();
-
+        Query query = new Query.Builder().bool(builder.build()).build();
+        searchRequestBuild.query(query);
         /**
          * 排序
          */
-        SortOptions sortOptions = null;
+        SortOptions.Builder sortBuild = new SortOptions.Builder();
         if (!StringUtils.isNullOrEmpty(param.getSort())) {
             String sort = param.getSort();
             String[] s = sort.split("_");
             FieldSort fieldSort = new FieldSort.Builder().field(s[0]).order(s[1].equalsIgnoreCase("asc") ? SortOrder.Asc : SortOrder.Desc).build();
-            sortOptions = new SortOptions.Builder().field(fieldSort).build();
-        } else {
+            sortBuild.field(fieldSort);
+            searchRequestBuild.sort(sortBuild.build());
+        } else { // 默认按价格排序
             FieldSort fieldSort = new FieldSort.Builder().field("skuPrice").order(SortOrder.Asc).build();
-            sortOptions = new SortOptions.Builder().field(fieldSort).build();
+            sortBuild.field(fieldSort);
+            searchRequestBuild.sort(sortBuild.build());
         }
         // 分页
         Integer page = (param.getPageNum() - 1) * EsConstant.PRODUCT_PAGESIZE;
+        searchRequestBuild.from(page).size(EsConstant.PRODUCT_PAGESIZE);
         // 高亮
-        Highlight highlight = null;
+        Highlight.Builder highlightBuild = new Highlight.Builder();
         if (!StringUtils.isNullOrEmpty(param.getKeyword())) {
-            highlight = new Highlight.Builder().fields("skuTitle", b -> b.preTags("<b style='color:red'>").postTags("</b>")).build();
+            highlightBuild.fields("skuTitle", b -> b.preTags("<b style='color:red'>").postTags("</b>"));
+            searchRequestBuild.highlight(highlightBuild.build());
         }
         /**
          * 聚合分析
@@ -172,14 +180,7 @@ public class MallSearchServiceImpl implements MallSearchService {
 
         transport.close();
         * */
-        SearchRequest searchRequest = new SearchRequest.Builder()
-                .index(EsConstant.PRODUCT_INDEX)
-                .query(query)
-                .sort(sortOptions)
-                .from(page)
-                .size(EsConstant.PRODUCT_PAGESIZE)
-                .highlight(highlight)
-                .build();
+        SearchRequest searchRequest = searchRequestBuild.build();
         System.out.println(searchRequest.toString());
         return searchRequest;
     }
