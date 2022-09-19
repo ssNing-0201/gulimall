@@ -5,6 +5,7 @@ import co.elastic.clients.elasticsearch._types.FieldSort;
 import co.elastic.clients.elasticsearch._types.FieldValue;
 import co.elastic.clients.elasticsearch._types.SortOptions;
 import co.elastic.clients.elasticsearch._types.SortOrder;
+import co.elastic.clients.elasticsearch._types.aggregations.Aggregation;
 import co.elastic.clients.elasticsearch._types.query_dsl.*;
 import co.elastic.clients.elasticsearch.core.SearchRequest;
 import co.elastic.clients.elasticsearch.core.SearchResponse;
@@ -116,7 +117,7 @@ public class MallSearchServiceImpl implements MallSearchService {
 
         }
         // 4、bool - filter -按照是否有库存查询
-        Query byHasStock = TermQuery.of(t -> t.field("hasStock").value(param.getHasStock()==1))._toQuery();
+        Query byHasStock = TermQuery.of(t -> t.field("hasStock").value(param.getHasStock() == 1))._toQuery();
         builder.filter(byHasStock);
 
         // 5、bool - filter -按照价格区间查询查询
@@ -166,20 +167,23 @@ public class MallSearchServiceImpl implements MallSearchService {
         /**
          * 聚合分析
          */
+        // 品牌聚合
+        Aggregation.Builder.ContainerBuilder brand_agg = new Aggregation.Builder().terms(t -> t.field("brandId").size(50));
+        // 品牌子聚合
+        brand_agg.aggregations("brand_name_agg", a -> a.terms(t -> t.field("brandName").size(1)));
+        brand_agg.aggregations("brand_img_agg", a -> a.terms(t -> t.field("brandImg").size(1)));
+        searchRequestBuild.aggregations("brand_agg", brand_agg.build());
+        // 分类聚合
+        Aggregation.Builder.ContainerBuilder catalog_agg = new Aggregation.Builder().terms(t -> t.field("catalogId").size(20));
+        catalog_agg.aggregations("catalog_name_agg", a -> a.terms(t -> t.field("catalogName").size(1)));
+        searchRequestBuild.aggregations("catalog_agg", catalog_agg.build());
+        // 属性聚合
+        Aggregation.Builder.ContainerBuilder attr_id_agg = new Aggregation.Builder().nested(n -> n.path("attrs")).aggregations("attr_id_agg", a -> a.terms(t -> t.field("attrs.attrId").size(1)));
+        attr_id_agg.aggregations("attr_name_agg",a->a.terms(t->t.field("attrs.attrName").size(1)));
+        attr_id_agg.aggregations("attr_value_agg",a->a.terms(t->t.field("attrs.attrValue").size(1)));
+        searchRequestBuild.aggregations("attr_agg", attr_id_agg.build());
 
 
-
-        /*
-        * MatchQuery matchQuery = new MatchQuery.Builder().field("age").query(30).build();
-        Query query = new Query.Builder().match(matchQuery).build();
-
-        SearchRequest searchRequest = new SearchRequest.Builder().query(query).build();
-        SearchResponse<Object> search = client.search(searchRequest, Object.class);
-        System.out.println("查询结果" + search);
-
-
-        transport.close();
-        * */
         SearchRequest searchRequest = searchRequestBuild.build();
         System.out.println(searchRequest.toString());
         return searchRequest;
