@@ -89,11 +89,11 @@ public class MallSearchServiceImpl implements MallSearchService {
         }
         result.setProducts(esModels);
         // 2、当前所有商品涉及到属性
-        SearchResult.AttrVo attrVo = new SearchResult.AttrVo();
         List<SearchResult.AttrVo> attrVos = new ArrayList<>();
         NestedAggregate attr_agg = response.aggregations().get("attr_agg").nested();
         List<LongTermsBucket> attr_id_agg = attr_agg.aggregations().get("attr_id_agg").lterms().buckets().array();
         for (LongTermsBucket bucket : attr_id_agg) {
+            SearchResult.AttrVo attrVo = new SearchResult.AttrVo();
             attrVo.setAttrId(bucket.key());
             attrVo.setAttrName(bucket.aggregations().get("attr_name_agg").sterms().buckets().array().get(0).key());
             List<StringTermsBucket> attr_value_agg = bucket.aggregations().get("attr_value_agg").sterms().buckets().array();
@@ -102,6 +102,7 @@ public class MallSearchServiceImpl implements MallSearchService {
                 attrValue.add(b.key());
             }
             attrVo.setAttrValue(attrValue);
+            attrVos.add(attrVo);
         }
 
         result.setAttrs(attrVos);

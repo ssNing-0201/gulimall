@@ -781,7 +781,7 @@
                 <!--品牌-->
                 <div class="JD_nav_wrap">
                     <div class="sl_key">
-                        <span>品牌：</span>
+                        <span><b>品牌：</b></span>
                     </div>
                     <div class="sl_value">
                         <div class="sl_value_logo">
@@ -810,45 +810,31 @@
                         </a>
                     </div>
                 </div>
-                <!--价格-->
-               <!-- <div class="JD_pre">
+                <!--分类-->
+                <div class="JD_nav_wrap">
                     <div class="sl_key">
-                        <span>价格：</span>
+                        <span><b>分类：</b></span>
                     </div>
-                    <div class="sl_value">
-                        <ul>
-                            <li><a href="/static/search/#">0-499</a></li>
-                            <li><a href="/static/search/#">500-999</a></li>
-                            <li><a href="/static/search/#">1000-1699</a></li>
-                            <li><a href="/static/search/#">1700-2799</a></li>
-                            <li><a href="/static/search/#">2800-4499</a></li>
-                            <li><a href="/static/search/#">4500-11999</a></li>
-                            <li><a href="/static/search/#">12000以上</a></li>
-                            <li class="sl_value_li">
-                                <input type="text">
-                                <p>-</p>
-                                <input type="text">
-                                <a href="/static/search/#">确定</a>
-                            </li>
-                        </ul>
+                    <div class="JD_pre">
+                        <div class="sl_key">
+                            <ul>
+                                <li th:each="catalog:${result.catalogs}"><a href="/static/search/#" th:text="${catalog.catalogName}">5.56英寸及以上</a></li>
+                            </ul>
+                        </div>
                     </div>
-                </div>-->
-                <!--系统-->
-                <!--<div class="JD_pre">
-                    <div class="sl_key">
-                        <span>系统：</span>
+                    <div class="sl_ext">
+                        <a href="/static/search/#">
+                            更多
+                            <i style='background: url("/static/search/image/search.ele.png")no-repeat 3px 7px'></i>
+                            <b style='background: url("/static/search/image/search.ele.png")no-repeat 3px -44px'></b>
+                        </a>
+                        <a href="/static/search/#">
+                            多选
+                            <i>+</i>
+                            <span>+</span>
+                        </a>
                     </div>
-                    <div class="sl_value">
-                        <ul>
-                            <li><a href="/static/search/#">0-安卓（Android）</a></li>
-                            <li><a href="/static/search/#">苹果（IOS）</a></li>
-                            <li><a href="/static/search/#">微软（WindowsPhone）</a></li>
-                            <li><a href="/static/search/#">基础功能机系统 </a></li>
-                            <li><a href="/static/search/#">其他</a></li>
-                        </ul>
-                    </div>
-                </div>-->
-                <!--屏幕尺寸-->
+                </div>
                 <div class="JD_pre" th:each="attr:${result.attrs}">
                     <div class="sl_key">
                         <span th:text="${attr.attrName}+':'">屏幕尺寸：</span>
@@ -859,92 +845,6 @@
                         </ul>
                     </div>
                 </div>
-                <!--&lt;!&ndash;热点&ndash;&gt;
-                <div class="JD_pre">
-                    <div class="sl_key">
-                        <span>热点：</span>
-                    </div>
-                    <div class="sl_value">
-                        <ul>
-                            <li><a href="/static/search/#">以旧换新</a></li>
-                            <li><a href="/static/search/#">功能机</a></li>
-                            <li><a href="/static/search/#">儿童手机</a></li>
-                            <li><a href="/static/search/#">合约机</a></li>
-                            <li><a href="/static/search/#">全面屏</a></li>
-                            <li><a href="/static/search/#">直板键盘</a></li>
-                            <li><a href="/static/search/#">翻盖</a></li>
-                            <li><a href="/static/search/#">商务手机</a></li>
-                            <li><a href="/static/search/#">安全手机</a></li>
-                            <li><a href="/static/search/#">键盘手机</a></li>
-                        </ul>
-                    </div>
-                    <div class="sl_ext">
-                        <a href="/static/search/#" class="sl_ext_show">
-                            更多
-                            <i style='background: url("image/search.ele.png")no-repeat 3px 7px'></i>
-                            <b style='background: url("image/search.ele.png")no-repeat 3px -44px'></b>
-                        </a>
-                        <a href="/static/search/#">
-                            多选
-                            <i>+</i>
-                            <span>+</span>
-                        </a>
-                    </div>
-                </div>
-                &lt;!&ndash;机身颜色&ndash;&gt;
-                <div class="JD_pre">
-                    <div class="sl_key">
-                        <span>机身颜色：</span>
-                    </div>
-                    <div class="sl_value">
-                        <ul>
-                            <li><a href="/static/search/#">白色</a></li>
-                            <li><a href="/static/search/#">黑色</a></li>
-                            <li><a href="/static/search/#">灰色</a></li>
-                            <li><a href="/static/search/#">金色</a></li>
-                            <li><a href="/static/search/#">银色</a></li>
-                            <li><a href="/static/search/#">红色</a></li>
-                            <li><a href="/static/search/#">蓝色</a></li>
-                            <li><a href="/static/search/#">粉色</a></li>
-                            <li><a href="/static/search/#">黄的</a></li>
-                            <li><a href="/static/search/#">蓝色</a></li>
-                        </ul>
-                    </div>
-                    <div class="sl_ext">
-                        <a href="/static/search/#"></a>
-                        <a href="/static/search/#">
-                            多选
-                            <i>+</i>
-                            <span>+</span>
-                        </a>
-                    </div>
-                </div>
-                &lt;!&ndash;机身内存&ndash;&gt;
-                <div class="JD_pre" style="border: 0">
-                    <div class="sl_key">
-                        <span>机身内存：</span>
-                    </div>
-                    <div class="sl_value">
-                        <ul>
-                            <li><a href="/static/search/#">16G</a></li>
-                            <li><a href="/static/search/#">8G</a></li>
-                            <li><a href="/static/search/#">256G</a></li>
-                            <li><a href="/static/search/#">128G</a></li>
-                            <li><a href="/static/search/#">64G</a></li>
-                            <li><a href="/static/search/#">32G</a></li>
-                            <li><a href="/static/search/#">8G以下</a></li>
-                            <li><a href="/static/search/#">支持内存卡</a></li>
-                        </ul>
-                    </div>
-                    <div class="sl_ext">
-                        <a href="/static/search/#"></a>
-                        <a href="/static/search/#">
-                            多选
-                            <i>+</i>
-                            <span>+</span>
-                        </a>
-                    </div>
-                </div>-->
             </div>
             <div class="JD_show">
                 <a href="/static/search/#">
