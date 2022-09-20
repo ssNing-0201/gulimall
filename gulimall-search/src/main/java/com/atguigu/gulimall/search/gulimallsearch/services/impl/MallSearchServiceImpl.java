@@ -205,8 +205,10 @@ public class MallSearchServiceImpl implements MallSearchService {
 
         }
         // 4、bool - filter -按照是否有库存查询
-        Query byHasStock = TermQuery.of(t -> t.field("hasStock").value(param.getHasStock() == 1))._toQuery();
-        builder.filter(byHasStock);
+        if (param.getHasStock()!=null){
+            Query byHasStock = TermQuery.of(t -> t.field("hasStock").value(param.getHasStock() == 1))._toQuery();
+            builder.filter(byHasStock);
+        }
 
         // 5、bool - filter -按照价格区间查询查询
         if (!StringUtils.isNullOrEmpty(param.getSkuPrice())) {
@@ -263,12 +265,12 @@ public class MallSearchServiceImpl implements MallSearchService {
         searchRequestBuild.aggregations("brand_agg", brand_agg.build());
         // 分类聚合
         Aggregation.Builder.ContainerBuilder catalog_agg = new Aggregation.Builder().terms(t -> t.field("catalogId").size(20));
-        catalog_agg.aggregations("catalog_name_agg", a -> a.terms(t -> t.field("catalogName").size(1)));
+        catalog_agg.aggregations("catalog_name_agg", a -> a.terms(t -> t.field("catalogName").size(10)));
         searchRequestBuild.aggregations("catalog_agg", catalog_agg.build());
         // 属性聚合
-        Aggregation.Builder.ContainerBuilder attr_id_agg = new Aggregation.Builder().nested(n -> n.path("attrs")).aggregations("attr_id_agg", a -> a.terms(t -> t.field("attrs.attrId").size(1))
-                .aggregations("attr_name_agg", b -> b.terms(t -> t.field("attrs.attrName").size(1)))
-                .aggregations("attr_value_agg", c -> c.terms(t -> t.field("attrs.attrValue").size(1)))
+        Aggregation.Builder.ContainerBuilder attr_id_agg = new Aggregation.Builder().nested(n -> n.path("attrs")).aggregations("attr_id_agg", a -> a.terms(t -> t.field("attrs.attrId").size(10))
+                .aggregations("attr_name_agg", b -> b.terms(t -> t.field("attrs.attrName").size(10)))
+                .aggregations("attr_value_agg", c -> c.terms(t -> t.field("attrs.attrValue").size(10)))
         );
         searchRequestBuild.aggregations("attr_agg", attr_id_agg.build());
 
