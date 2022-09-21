@@ -20,6 +20,7 @@ public class SearchResult {
     private List<BrandVo> brands; // 当前查询结果，所有涉及的品牌信息
     private List<AttrVo> attrs; // 查询到的所有涉及的属性。
     private List<CatalogVo> catalogs; // 当前查询结果所涉及到的分类信息
+    private List<Integer> pages; // 页码
 
     //===================以上是返回给页面的所有信息========================
 

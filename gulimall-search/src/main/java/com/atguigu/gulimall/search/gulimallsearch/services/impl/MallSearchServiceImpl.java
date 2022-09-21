@@ -147,7 +147,12 @@ public class MallSearchServiceImpl implements MallSearchService {
         // 1、分页信息-总页码
         int totalPages = (int) total % EsConstant.PRODUCT_PAGESIZE == 0 ? ((int) total / EsConstant.PRODUCT_PAGESIZE) : ((int) total / EsConstant.PRODUCT_PAGESIZE) + 1;
         result.setTotalPages(totalPages);
-
+        // 分页信息-页码
+        List<Integer> pages = new ArrayList<>();
+        for (int i=1;i<=totalPages;i++){
+            pages.add(i);
+        }
+        result.setPages(pages);
         return result;
 
     }
@@ -189,17 +194,17 @@ public class MallSearchServiceImpl implements MallSearchService {
         // 3、bool - filter -按照指定属性查询
         if (param.getAttrs() != null && param.getAttrs().size() > 0) {
             List<FieldValue> fieldValues = new ArrayList<>();
-            String attrId = null;
+            Long attrId = null;
             for (String attrStr : param.getAttrs()) {
                 String[] s = attrStr.split("_");
-                attrId = s[0]; // 检索的属性id
+                attrId =Long.valueOf(s[0]); // 检索的属性id
                 String[] attrValues = s[1].split(":"); // 属性检索用的值
                 for (String val : attrValues) {
                     fieldValues.add(new FieldValue.Builder().stringValue(val).build());
                 }
                 TermsQueryField termsQueryField = new TermsQueryField.Builder().value(fieldValues).build();
-                String finalAttrId = attrId;
-                Query byAttrs = NestedQuery.of(n -> n.path("attrs").query(q -> q.bool(b -> b.must(m -> m.term(t -> t.field("attrs.attrID").value(finalAttrId))).must(m -> m.terms(t -> t.field("attrs.attrValue").terms(termsQueryField))))).scoreMode(null))._toQuery();
+                Long finalAttrId = attrId;
+                Query byAttrs = NestedQuery.of(n -> n.path("attrs").query(q -> q.bool(b -> b.must(m -> m.term(t -> t.field("attrs.attrId").value(finalAttrId))).must(m -> m.terms(t -> t.field("attrs.attrValue").terms(termsQueryField))))).scoreMode(null))._toQuery();
                 builder.filter(byAttrs);
             }
 
@@ -216,12 +221,12 @@ public class MallSearchServiceImpl implements MallSearchService {
             if (s.length == 2) {
                 JsonString min = Json.createValue(s[0] == "" ? "0" : s[0]);
                 JsonString max = Json.createValue(s[1]);
-                Query bySkuPrice = RangeQuery.of(r -> r.field("skuPrice").gte((JsonData) min).lte((JsonData) max))._toQuery();
+                Query bySkuPrice = RangeQuery.of(r -> r.field("skuPrice").gte(JsonData.of(min)).lte(JsonData.of(max)))._toQuery();
                 builder.filter(bySkuPrice);
             } else {
                 if (!param.getSkuPrice().startsWith("_")) {
                     JsonString min = Json.createValue(s[0]);
-                    Query bySkuPrice = RangeQuery.of(r -> r.field("skuPrice").gte((JsonData) min))._toQuery();
+                    Query bySkuPrice = RangeQuery.of(r -> r.field("skuPrice").gte(JsonData.of(min)))._toQuery();
                     builder.filter(bySkuPrice);
                 }
             }
