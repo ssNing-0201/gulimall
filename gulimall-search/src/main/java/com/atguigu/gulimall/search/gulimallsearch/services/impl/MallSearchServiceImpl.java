@@ -17,10 +17,14 @@ import co.elastic.clients.json.JsonData;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.atguigu.common.to.es.SkuEsModel;
+import com.atguigu.common.utils.R;
 import com.atguigu.gulimall.search.gulimallsearch.constant.EsConstant;
+import com.atguigu.gulimall.search.gulimallsearch.feign.ProductFeignService;
 import com.atguigu.gulimall.search.gulimallsearch.services.MallSearchService;
+import com.atguigu.gulimall.search.gulimallsearch.vo.AttrResponseVo;
 import com.atguigu.gulimall.search.gulimallsearch.vo.SearchParam;
 import com.atguigu.gulimall.search.gulimallsearch.vo.SearchResult;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.mysql.cj.util.StringUtils;
 import jakarta.json.Json;
 import jakarta.json.JsonString;
@@ -29,10 +33,13 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import static co.elastic.clients.elasticsearch._types.aggregations.Aggregation.Kind.Terms;
 
@@ -42,6 +49,8 @@ public class MallSearchServiceImpl implements MallSearchService {
     //去 ES 进行检索
     @Resource
     private ElasticsearchClient client;
+    @Resource
+    private ProductFeignService productFeignService;
 
 
     @Override
@@ -68,7 +77,7 @@ public class MallSearchServiceImpl implements MallSearchService {
      * @param response
      * @return
      */
-    private SearchResult buildSearchResult(SearchResponse<Object> response, SearchParam param) {
+    private SearchResult buildSearchResult(SearchResponse<Object> response, SearchParam param) throws UnsupportedEncodingException {
 
         SearchResult result = new SearchResult();
         HitsMetadata<Object> hits = response.hits();
@@ -149,12 +158,37 @@ public class MallSearchServiceImpl implements MallSearchService {
         result.setTotalPages(totalPages);
         // 分页信息-页码
         List<Integer> pages = new ArrayList<>();
-        for (int i=1;i<=totalPages;i++){
+        for (int i = 1; i <= totalPages; i++) {
             pages.add(i);
         }
         result.setPages(pages);
-        return result;
 
+        // 构建面包屑导航
+        if (param.getAttrs() != null && param.getAttrs().size() > 0) {
+            List<SearchResult.NavVo> navVos = new ArrayList<>();
+            List<String> attrs = param.getAttrs();
+            for (String a : attrs) {
+                SearchResult.NavVo navVo = new SearchResult.NavVo();
+                String[] s = a.split("_");
+                navVo.setNavValue(s[1]);
+                /*R attrInfo = productFeignService.getAttrInfo(Long.valueOf(s[0]));
+                if (attrInfo.get("code").toString().equals("0")){
+                    AttrResponseVo attr = (AttrResponseVo) attrInfo.get("attr");
+                    navVo.setNavName(attr.getAttrName());
+                }else {
+                    navVo.setNavName(s[0]);
+                }*/
+                navVo.setNavName(s[2]);
+                String attr = URLEncoder.encode(a, "UTF-8");
+                // 空格，浏览器与java的差异化处理不同 所以要以下步骤 将java识别为 + 的空格替换为浏览器认识的空格 %20
+                attr = attr.replace("+","%20");
+                String queryString = param.getQueryString().replace("&attrs=" + attr, "");
+                navVo.setLink("http://search.gulimall.com/list.html?" + queryString);
+                navVos.add(navVo);
+            }
+            result.setNavs(navVos);
+        }
+        return result;
     }
 
     /**
@@ -197,7 +231,7 @@ public class MallSearchServiceImpl implements MallSearchService {
             Long attrId = null;
             for (String attrStr : param.getAttrs()) {
                 String[] s = attrStr.split("_");
-                attrId =Long.valueOf(s[0]); // 检索的属性id
+                attrId = Long.valueOf(s[0]); // 检索的属性id
                 String[] attrValues = s[1].split(":"); // 属性检索用的值
                 for (String val : attrValues) {
                     fieldValues.add(new FieldValue.Builder().stringValue(val).build());
@@ -210,7 +244,7 @@ public class MallSearchServiceImpl implements MallSearchService {
 
         }
         // 4、bool - filter -按照是否有库存查询
-        if (param.getHasStock()!=null){
+        if (param.getHasStock() != null) {
             Query byHasStock = TermQuery.of(t -> t.field("hasStock").value(param.getHasStock() == 1))._toQuery();
             builder.filter(byHasStock);
         }
@@ -281,7 +315,7 @@ public class MallSearchServiceImpl implements MallSearchService {
 
 
         SearchRequest searchRequest = searchRequestBuild.build();
-        System.out.println(searchRequest.toString());
+
         return searchRequest;
     }
 }

@@ -25,4 +25,5 @@ public class SearchParam {
     private List<Long> brandId; // 品牌id
     private List<String> attrs; // 按照属性进行筛选
     private Integer pageNum = 1; // 页码
+    private String queryString; // 查询字符串
 }

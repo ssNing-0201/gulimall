@@ -1,5 +1,6 @@
 package com.atguigu.gulimall.search.gulimallsearch.vo;
 
+import co.elastic.clients.elasticsearch.nodes.Ingest;
 import com.atguigu.common.to.es.SkuEsModel;
 import lombok.Data;
 
@@ -23,6 +24,16 @@ public class SearchResult {
     private List<Integer> pages; // 页码
 
     //===================以上是返回给页面的所有信息========================
+    private List<NavVo> navs;
+
+    @Data
+    public static class NavVo{
+        private String navName;
+        private String navValue;
+        private String link;
+    }
+
+    //===================以上是面包屑导航的所有信息========================
 
     @Data
     public static class BrandVo{

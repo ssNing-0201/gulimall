@@ -768,6 +768,11 @@
             </div>
         </div>
         <i><img src="/static/search/image/right-@1x.png" alt=""></i>
+        <div class="JD_ipone_one d">
+            <a th:class="qqq" th:each="nav:${result.navs}" th:href="${nav.link}"><span
+                    th:text="${nav.navName}">参数名</span>&nbsp;:&nbsp;<span
+                    th:text="${nav.navValue}">参数值</span>&nbsp;x</a>
+        </div>
     </div>
 </div>
 
@@ -846,12 +851,12 @@
                 <!--属性-->
                 <div class="JD_pre" th:each="attr:${result.attrs}">
                     <div class="sl_key">
-                        <span th:text="${attr.attrName}+':'">屏幕尺寸：</span>
+                        <span th:id="${attr.attrId}" th:text="${attr.attrName}+':'">屏幕尺寸：</span>
                     </div>
                     <div class="sl_value">
                         <ul>
                             <li th:each="val:${attr.attrValue}"><a href="/static/search/#"
-                                                                   th:href="${'javascript:searchProducts(&quot;attrs&quot;,&quot;'+attr.attrId+'_'+val+'&quot;)'}"
+                                                                   th:href="${'javascript:searchProducts(&quot;attrs&quot;,&quot;'+attr.attrId+'_'+val+'_'+attr.attrName+'&quot;)'}"
                                                                    th:text="${val}">5.56英寸及以上</a></li>
                         </ul>
                     </div>
@@ -1061,8 +1066,12 @@
                                 #strings.endsWith(p,'desc'))?'↓':'↑'}]]</a>
                             <a href="/static/search/#">评论分</a>
                             <a href="/static/search/#">上架时间</a>
-                            <input id="skuPricrsFrom" th:value="${(!#strings.isEmpty(priceRange)&&!#strings.startsWith(priceRange,'_'))?#strings.listSplit(priceRange,'_').get(0):''}" type="number" style="width: 100px;margin-left: 30px"> &nbsp;&nbsp;-&nbsp;&nbsp;
-                            <input id="skuPricesTo" th:value="${(!#strings.isEmpty(priceRange)&&!#strings.endsWith(priceRange,'_'))?(#strings.startsWith(priceRange,'_')?#strings.listSplit(priceRange,'_').get(0):#strings.listSplit(priceRange,'_').get(1)):''}" type="number" style="width: 100px;">
+                            <input id="skuPricrsFrom"
+                                   th:value="${(!#strings.isEmpty(priceRange)&&!#strings.startsWith(priceRange,'_'))?#strings.listSplit(priceRange,'_').get(0):''}"
+                                   type="number" style="width: 100px;margin-left: 30px"> &nbsp;&nbsp;-&nbsp;&nbsp;
+                            <input id="skuPricesTo"
+                                   th:value="${(!#strings.isEmpty(priceRange)&&!#strings.endsWith(priceRange,'_'))?(#strings.startsWith(priceRange,'_')?#strings.listSplit(priceRange,'_').get(0):#strings.listSplit(priceRange,'_').get(1)):''}"
+                                   type="number" style="width: 100px;">
                             <button id="skuPriceSearchBtn">确定</button>
                         </div>
                         <div class="filter_top_right">
@@ -1173,7 +1182,8 @@
                                 </li>
                                 <li>
                                     <a href="/static/search/#" th:with="ck=${param.hasStock}">
-                                        <input id="showHasStock" type="checkbox" th:checked="${#strings.equals(ck,'1')}">
+                                        <input id="showHasStock" type="checkbox"
+                                               th:checked="${#strings.equals(ck,'1')}">
                                         仅显示有货
                                     </a>
                                 </li>
@@ -2004,7 +2014,16 @@
     })
 
     function searchProducts(name, value) {
-        location.href = replaceAndAddParamVal(location.href,name,value);
+        if (name == "attr") {
+            var attrId = value.split("_").get(0);
+            if (location.href.toString().includes(attrId)) {
+                location.href = replaceAndAddParamVal(location.href, name, value);
+            }else {
+                location.href = attrAdd(location.href, name, value);
+            }
+        } else {
+            location.href = replaceAndAddParamVal(location.href, name, value);
+        }
     }
 
     function searchByKeyword() {
@@ -2036,6 +2055,14 @@
                 nUrl = oUrl + '?' + paramName + '=' + replaceVal
             }
         }
+        return nUrl;
+    }
+
+    function attrAdd(url, paramName, replaceVal) {
+        var oUrl = url.toString();
+        var nUrl = "";
+        var re = eval('/(' + paramName + '=)([^&]*)/gi');
+        nUrl = oUrl.replace(re, paramName + '=' + replaceVal);
         return nUrl;
     }
 
@@ -2079,16 +2106,20 @@
     });
     $("#showHasStock").change(function () {
 
-        if ($(this).prop("checked")){
-            location.href = replaceAndAddParamVal(location.href,"hasStock",1);
-        }else {
+        if ($(this).prop("checked")) {
+            location.href = replaceAndAddParamVal(location.href, "hasStock", 1);
+        } else {
             var href = location.href.toString();
             var re = eval('/(&hasStock=)([^&]*)/gi');
-            location.href = href.replace(re,"");
+            location.href = href.replace(re, "");
         }
         return false;
     });
 
+    function getAttrName(id) {
+        var val = $("#id").text();
+        return val;
+    }
 </script>
 </body>
 </html>
