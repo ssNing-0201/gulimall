@@ -171,13 +171,6 @@ public class MallSearchServiceImpl implements MallSearchService {
                 SearchResult.NavVo navVo = new SearchResult.NavVo();
                 String[] s = a.split("_");
                 navVo.setNavValue(s[1]);
-                /*R attrInfo = productFeignService.getAttrInfo(Long.valueOf(s[0]));
-                if (attrInfo.get("code").toString().equals("0")){
-                    AttrResponseVo attr = (AttrResponseVo) attrInfo.get("attr");
-                    navVo.setNavName(attr.getAttrName());
-                }else {
-                    navVo.setNavName(s[0]);
-                }*/
                 navVo.setNavName(s[2]);
                 String attr = URLEncoder.encode(a, "UTF-8");
                 // 空格，浏览器与java的差异化处理不同 所以要以下步骤 将java识别为 + 的空格替换为浏览器认识的空格 %20
