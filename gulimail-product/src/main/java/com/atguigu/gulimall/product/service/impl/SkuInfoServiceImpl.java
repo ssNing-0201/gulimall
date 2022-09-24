@@ -2,9 +2,8 @@ package com.atguigu.gulimall.product.service.impl;
 
 import com.atguigu.gulimall.product.entity.SkuImagesEntity;
 import com.atguigu.gulimall.product.entity.SpuInfoDescEntity;
-import com.atguigu.gulimall.product.service.AttrGroupService;
-import com.atguigu.gulimall.product.service.SkuImagesService;
-import com.atguigu.gulimall.product.service.SpuInfoDescService;
+import com.atguigu.gulimall.product.service.*;
+import com.atguigu.gulimall.product.vo.SkuItemSaleAttrsVo;
 import com.atguigu.gulimall.product.vo.SkuItemVo;
 import com.atguigu.gulimall.product.vo.SpuItemGroupVo;
 import com.mysql.cj.util.StringUtils;
@@ -23,7 +22,6 @@ import com.atguigu.common.utils.Query;
 
 import com.atguigu.gulimall.product.dao.SkuInfoDao;
 import com.atguigu.gulimall.product.entity.SkuInfoEntity;
-import com.atguigu.gulimall.product.service.SkuInfoService;
 
 import javax.annotation.Resource;
 
@@ -37,6 +35,8 @@ public class SkuInfoServiceImpl extends ServiceImpl<SkuInfoDao, SkuInfoEntity> i
     private SpuInfoDescService spuInfoDescService;
     @Resource
     private AttrGroupService attrGroupService;
+    @Resource
+    private SkuSaleAttrValueService skuSaleAttrValueService;
 
     @Override
     public PageUtils queryPage(Map<String, Object> params) {
@@ -114,7 +114,8 @@ public class SkuInfoServiceImpl extends ServiceImpl<SkuInfoDao, SkuInfoEntity> i
         List<SkuImagesEntity> images = skuImagesService.getImagesBySkuId(skuId);
         skuItemVo.setImages(images);
         // 3、获取spu的销售属性销售属性组合
-
+        List<SkuItemSaleAttrsVo> saleAttrsVos = skuSaleAttrValueService.getSaleAttrsBySpuId(infoEntity.getSpuId());
+        skuItemVo.setSaleAttr(saleAttrsVos);
         // 4、获取spu介绍
         Long spuId = infoEntity.getSpuId();
         SpuInfoDescEntity spuInfoDesc = spuInfoDescService.getById(spuId);

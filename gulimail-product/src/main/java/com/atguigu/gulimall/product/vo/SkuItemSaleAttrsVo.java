@@ -8,7 +8,7 @@ import java.util.List;
 @Data
 @ToString
 public class SkuItemSaleAttrsVo {
-    private Long attrid;
+    private Long attrId;
     private String attrName;
-    private List<String> attrValues;
+    private String attrValues;
 }

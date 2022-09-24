@@ -1,9 +1,12 @@
 package com.atguigu.gulimall.product;
 
 import com.atguigu.gulimall.product.dao.AttrGroupDao;
+import com.atguigu.gulimall.product.dao.SkuSaleAttrValueDao;
 import com.atguigu.gulimall.product.entity.BrandEntity;
+import com.atguigu.gulimall.product.service.AttrGroupService;
 import com.atguigu.gulimall.product.service.BrandService;
 import com.atguigu.gulimall.product.service.CategoryService;
+import com.atguigu.gulimall.product.vo.SkuItemSaleAttrsVo;
 import com.atguigu.gulimall.product.vo.SkuItemVo;
 import com.atguigu.gulimall.product.vo.SpuItemGroupVo;
 import lombok.extern.slf4j.Slf4j;
@@ -40,9 +43,25 @@ class GulimailProductApplicationTests {
     @Resource
     AttrGroupDao attrGroupDao;
 
+    @Resource
+    SkuSaleAttrValueDao skuSaleAttrValueDao;
+
+    @Resource
+    AttrGroupService attrGroupService;
+
     @Test
     public void test(){
-        List<SpuItemGroupVo> attrGroupWithAttrsBySpuId = attrGroupDao.getAttrGroupWithAttrsBySpuId(13l, 225l);
+        List<SkuItemSaleAttrsVo> saleAttrsBySpuId = skuSaleAttrValueDao.getSaleAttrsBySpuId(13l);
+        System.out.println(saleAttrsBySpuId);
+    }
+    @Test
+    public void test01(){
+        List<SpuItemGroupVo> attrGroupWithAttrsBySpuId = attrGroupService.getAttrGroupWithAttrsBySpuId(13L, 225L);
+        System.out.println(attrGroupWithAttrsBySpuId);
+    }
+    @Test
+    public void test02(){
+        List<SpuItemGroupVo> attrGroupWithAttrsBySpuId = attrGroupDao.getAttrGroupWithAttrsBySpuId(13L, 225L);
         System.out.println(attrGroupWithAttrsBySpuId);
     }
 

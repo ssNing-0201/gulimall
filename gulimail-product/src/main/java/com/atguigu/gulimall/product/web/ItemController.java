@@ -20,7 +20,7 @@ public class ItemController {
     public String skuItem(@PathVariable("skuId") Long skuId, Model model){
 
         SkuItemVo vo = skuInfoService.item(skuId);
-        model.addAttribute("",vo);
+        model.addAttribute("item",vo);
         return "item";
     }
 }
