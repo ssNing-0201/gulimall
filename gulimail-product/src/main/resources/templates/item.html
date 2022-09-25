@@ -596,9 +596,11 @@
 							<div class="box-attr clear" th:each="attr:${item.saleAttr}">
 								<dl>
 									<dt>选择[[${attr.attrName}]]</dt>
-									<dd th:each="val:${#strings.listSplit(attr.attrValues,',')}">
-										<a href="/static/item/#">
-											[[${val}]]
+									<dd th:each="vals:${attr.attrValues}" >
+
+										<a th:attr="
+										skus=${vals.skuIds},class=${#lists.contains(#strings.listSplit(vals.skuIds,','),item.info.skuId.toString())?'sku_attr_value checked':'sku_attr_value'}">
+											[[${vals.attrValue}]]
 											<!--<img src="/static/item/img/59ddfcb1Nc3edb8f1.jpg" />-->
 										</a>
 									</dd>
@@ -1757,7 +1759,37 @@
 
 	<script src="/static/item/js/jquery1.9.js" type="text/javascript" charset="utf-8"></script>
 	<script src="/static/item/js/js.js" type="text/javascript" charset="utf-8"></script>
-	<script type="text/javascript">
+	<script type="text/javascript"></script>
+	<script>
+		$(".sku_attr_value").click(function () {
+			var skus = new Array();
+			$(this).addClass("clicked");
+			var curr = $(this).attr("skus").split(",");
+			skus.push(curr);
+			$(this).parent().parent().find(".sku_attr_value").removeClass("checked")
+
+			$("a[class='sku_attr_value checked']").each(function () {
+				skus.push($(this).attr("skus").split(","));
+			});
+			console.log(skus);
+
+			var filterEle = skus[0];
+			for (var i=1;i<skus.length;i++){
+				filterEle = $(filterEle).filter(skus[i]);
+			}
+			console.log(filterEle[0])
+			location.href = "http://item.gulimall.com/"+filterEle[0]+".html"
+		})
+
+
+		$(function () {
+			$(".sku_attr_value").parent().css({"border":"solid 1px #ccc"});
+			$("a[class='sku_attr_value checked']").parent().css({"border":"solid 1px red"});
+
+		});
+
+
+
 	</script>
 
 </html>

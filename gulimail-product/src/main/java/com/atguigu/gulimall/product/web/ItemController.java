@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
+import java.util.concurrent.ExecutionException;
 
 @Controller
 public class ItemController {
@@ -17,7 +18,7 @@ public class ItemController {
     private SkuInfoService skuInfoService;
 
     @GetMapping("/{skuId}.html")
-    public String skuItem(@PathVariable("skuId") Long skuId, Model model){
+    public String skuItem(@PathVariable("skuId") Long skuId, Model model) throws ExecutionException, InterruptedException {
 
         SkuItemVo vo = skuInfoService.item(skuId);
         model.addAttribute("item",vo);
