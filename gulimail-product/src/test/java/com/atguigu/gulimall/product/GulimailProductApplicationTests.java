@@ -7,7 +7,6 @@ import com.atguigu.gulimall.product.service.AttrGroupService;
 import com.atguigu.gulimall.product.service.BrandService;
 import com.atguigu.gulimall.product.service.CategoryService;
 import com.atguigu.gulimall.product.vo.SkuItemSaleAttrsVo;
-import com.atguigu.gulimall.product.vo.SkuItemVo;
 import com.atguigu.gulimall.product.vo.SpuItemGroupVo;
 import lombok.extern.slf4j.Slf4j;
 import org.assertj.core.util.Arrays;
