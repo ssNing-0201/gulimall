@@ -109,7 +109,7 @@ public class LoginController {
             return "redirect:http://auth.gulimall.com/reg.html";
         }
         // 注册成功跳转登陆页
-        return "redirect:/login.html"; // 此处这么写因为config中映射了登陆页地址，所以可以省略 http://auth.gulimall.com
+        return "redirect:http://auth.gulimall.com/login.html";
     }
 
 
