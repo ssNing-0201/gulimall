@@ -3,10 +3,14 @@ package com.atguigu.gulimall.auth.controller;
 import com.atguigu.common.exception.BizCodeEnum;
 import com.atguigu.common.utils.R;
 import com.atguigu.gulimall.auth.constant.SendCodeConstant;
+import com.atguigu.gulimall.auth.feign.CheckuserNameAndPhoneFeignService;
+import com.atguigu.gulimall.auth.feign.MemberFeignService;
 import com.atguigu.gulimall.auth.feign.ThirdPartyFeignService;
+import com.atguigu.gulimall.auth.vo.MemberRegistVo;
 import com.atguigu.gulimall.auth.vo.UserRegistVo;
 import com.mysql.cj.util.StringUtils;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -30,6 +34,30 @@ public class LoginController {
     private StringRedisTemplate stringRedisTemplate;
     @Resource
     private ThirdPartyFeignService thirdPartyFeignService;
+    @Resource
+    private CheckuserNameAndPhoneFeignService feignService;
+    @Resource
+    private MemberFeignService memberFeignService;
+
+    @PostMapping("/checkphone")
+    public R checkPhone(@Param("phone") String phone){
+        boolean checkphone = feignService.checkphone(phone);
+        if (checkphone){
+            return R.ok();
+        }else {
+            return R.error(BizCodeEnum.PHONE_EXIST_EXCEPTION.getCode(), BizCodeEnum.PHONE_EXIST_EXCEPTION.getMsg());
+        }
+    }
+    @PostMapping("/checkusername")
+    public R checkUserName(@Param("userName") String userName){
+        boolean checkphone = feignService.checkusername(userName);
+        if (checkphone){
+            return R.ok();
+        }else {
+            return R.error(BizCodeEnum.USER_EXIST_EXCEPTION.getCode(), BizCodeEnum.USER_EXIST_EXCEPTION.getMsg());
+        }
+    }
+
 
     /**
      * 注册方法
@@ -49,7 +77,36 @@ public class LoginController {
         String code = vo.getCode();
         String s = stringRedisTemplate.opsForValue().get(SendCodeConstant.SMS_CODE_CHCHE_PREFIX + vo.getPhone());
         if (!StringUtils.isNullOrEmpty(s)){
-
+            if (code.equals(s.split("_"))){
+                // 删除验证码,令牌机制。
+                stringRedisTemplate.delete(SendCodeConstant.SMS_CODE_CHCHE_PREFIX + vo.getPhone());
+                // 验证通过
+                MemberRegistVo memberRegistVo = new MemberRegistVo();
+                memberRegistVo.setPhone(vo.getPhone());
+                memberRegistVo.setUserName(vo.getUserName());
+                memberRegistVo.setPassWord(vo.getPassWord());
+                R r = memberFeignService.regist(memberRegistVo);
+                if (r.get("code").equals("0")){
+                    // 成功
+                    // return "redirect:/login.html";
+                }else {
+                    // 失败
+                    Map<String,String> errors = new HashMap<>();
+                    errors.put("msg", (String) r.get("msg"));
+                    redirectAttributes.addFlashAttribute("errors",errors);
+                    return "redirect:http://auth.gulimall.com/reg.html";
+                }
+            }else {
+                Map<String, String> collect = new HashMap<>();
+                collect.put("code","验证码错误");
+                redirectAttributes.addFlashAttribute("errors",collect);
+                return "redirect:http://auth.gulimall.com/reg.html";
+            }
+        }else {
+            Map<String, String> collect = new HashMap<>();
+            collect.put("code","验证码错误");
+            redirectAttributes.addFlashAttribute("errors",collect);
+            return "redirect:http://auth.gulimall.com/reg.html";
         }
         // 注册成功跳转登陆页
         return "redirect:/login.html"; // 此处这么写因为config中映射了登陆页地址，所以可以省略 http://auth.gulimall.com

@@ -13,5 +13,8 @@ import org.apache.ibatis.annotations.Mapper;
  */
 @Mapper
 public interface MemberDao extends BaseMapper<MemberEntity> {
-	
+
+    MemberEntity selectCheckPhone(String phone);
+
+    MemberEntity selectCheckUserName(String userName);
 }

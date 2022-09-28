@@ -1,8 +1,10 @@
 package com.atguigu.gulimall.member.service;
 
+import com.atguigu.gulimall.member.vo.MemberRegistVo;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.atguigu.common.utils.PageUtils;
 import com.atguigu.gulimall.member.entity.MemberEntity;
+import org.apache.ibatis.annotations.Param;
 
 import java.util.Map;
 
@@ -16,5 +18,11 @@ import java.util.Map;
 public interface MemberService extends IService<MemberEntity> {
 
     PageUtils queryPage(Map<String, Object> params);
+
+    void regist(MemberRegistVo vo);
+
+    boolean checkPhoneUnique(@Param("phone") String phone);
+
+    boolean checkUserNameUnique(@Param("userName") String userName);
 }
 

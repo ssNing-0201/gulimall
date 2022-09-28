@@ -24,6 +24,11 @@
         <result property="status" column="status"/>
         <result property="createTime" column="create_time"/>
     </resultMap>
-
+    <select id="selectCheckPhone" resultMap="memberMap">
+        select * from ums_member where mobile=#{phone}
+    </select>
+    <select id="selectCheckUserName" resultMap="memberMap">
+        select * from ums_member where username=#{userName}
+    </select>
 
 </mapper>

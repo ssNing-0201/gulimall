@@ -16,6 +16,8 @@
         <result property="priviledgeBirthday" column="priviledge_birthday"/>
         <result property="note" column="note"/>
     </resultMap>
-
+    <select id="getDefaultLevel" resultMap="memberLevelMap">
+        select * from ums_member_level where default_status=1
+    </select>
 
 </mapper>
