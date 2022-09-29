@@ -17,7 +17,8 @@ public enum BizCodeEnum {
     SMS_CODE_EXCEPTION(10002, "验证码使用过频繁"),
     PRODUCT_UP_EXCEPTION(11000,"商品上架异常"),
     USER_EXIST_EXCEPTION(15001,"用户名存在"),
-    PHONE_EXIST_EXCEPTION(15002,"手机号存在");
+    PHONE_EXIST_EXCEPTION(15002,"手机号存在"),
+    LOGINACCT_PWD_EXCEPTION(15003,"账号或密码错误");
 
     private int code;
     private String msg;

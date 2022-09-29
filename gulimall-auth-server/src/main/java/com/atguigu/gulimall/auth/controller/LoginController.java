@@ -7,6 +7,7 @@ import com.atguigu.gulimall.auth.feign.CheckuserNameAndPhoneFeignService;
 import com.atguigu.gulimall.auth.feign.MemberFeignService;
 import com.atguigu.gulimall.auth.feign.ThirdPartyFeignService;
 import com.atguigu.gulimall.auth.vo.MemberRegistVo;
+import com.atguigu.gulimall.auth.vo.UserLoginVo;
 import com.atguigu.gulimall.auth.vo.UserRegistVo;
 import com.mysql.cj.util.StringUtils;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -38,6 +39,19 @@ public class LoginController {
     private CheckuserNameAndPhoneFeignService feignService;
     @Resource
     private MemberFeignService memberFeignService;
+
+    @PostMapping("/login")
+    public String login(UserLoginVo vo,RedirectAttributes redirectAttributes){
+        R login = memberFeignService.login(vo);
+        if (login.get("code").equals("0")){
+            return "redirect:http://gulimall.com";
+        }else {
+            Map<String ,String> errors = new HashMap<>();
+            errors.put("msg", String.valueOf(login.get("msg")));
+            redirectAttributes.addFlashAttribute("errors",errors);
+            return "redirect:http://auth.gulimall.com/login.html";
+        }
+    }
 
     @PostMapping("/checkphone")
     public R checkPhone(@Param("phone") String phone){

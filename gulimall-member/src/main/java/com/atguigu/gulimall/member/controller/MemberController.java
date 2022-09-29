@@ -3,7 +3,9 @@ package com.atguigu.gulimall.member.controller;
 import java.util.Arrays;
 import java.util.Map;
 
+import com.atguigu.common.exception.BizCodeEnum;
 import com.atguigu.gulimall.member.feign.CouponFeignService;
+import com.atguigu.gulimall.member.vo.MemberLoginVo;
 import com.atguigu.gulimall.member.vo.MemberRegistVo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -32,6 +34,18 @@ public class MemberController {
     @Resource
     CouponFeignService couponFeignService;
 
+
+    @PostMapping("/login")
+    public R login(@RequestBody MemberLoginVo vo){
+        MemberEntity member = memberService.login(vo);
+        if (member == null){
+            return R.error(BizCodeEnum.LOGINACCT_PWD_EXCEPTION.getCode(), BizCodeEnum.LOGINACCT_PWD_EXCEPTION.getMsg());
+        }else {
+            // TODO 登陆成功处理
+            return R.ok();
+        }
+
+    }
 
     @PostMapping("/regist")
     public R regist(@RequestBody MemberRegistVo vo){

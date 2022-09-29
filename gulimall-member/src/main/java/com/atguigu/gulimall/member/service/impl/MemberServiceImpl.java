@@ -1,15 +1,15 @@
 package com.atguigu.gulimall.member.service.impl;
 
+import com.atguigu.common.exception.BizCodeEnum;
+import com.atguigu.common.utils.R;
 import com.atguigu.gulimall.member.dao.MemberLevelDao;
 import com.atguigu.gulimall.member.entity.MemberLevelEntity;
+import com.atguigu.gulimall.member.vo.MemberLoginVo;
 import com.atguigu.gulimall.member.vo.MemberRegistVo;
 
-import org.apache.commons.codec.digest.DigestUtils;
-import org.apache.commons.codec.digest.Md5Crypt;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
@@ -83,6 +83,27 @@ public class MemberServiceImpl extends ServiceImpl<MemberDao, MemberEntity> impl
         return member==null?true:false;
     }
 
+    @Override
+    public MemberEntity login(MemberLoginVo vo) {
+        String loginacct = vo.getLoginacct();
+        String password = vo.getPassword();
 
-
+        // 数据库查询密码
+        MemberDao memberDao = this.baseMapper;
+        MemberEntity member = memberDao.selectOne(new QueryWrapper<MemberEntity>().eq("username", loginacct).or().eq("mobile", loginacct));
+        if (member == null){
+            return null;
+        }else {
+            // 验证密码
+            String passwordDb = member.getPassword();
+            BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+            if (passwordEncoder.matches(password,passwordDb)){
+                // 通过验证
+                return member;
+            }else {
+                // 密码验证失败
+                return null;
+            }
+        }
+    }
 }

@@ -4,8 +4,6 @@ server:
 spring:
   application:
     name: gulimall-auth-server
-
-
   cloud:
     nacos:
       discovery:
@@ -16,3 +14,9 @@ spring:
 
   redis:
     host: 127.0.0.1
+  main:
+    allow-circular-references: true
+    allow-bean-definition-overriding: true
+
+
+

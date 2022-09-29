@@ -1,5 +1,7 @@
 package com.atguigu.gulimall.member.service;
 
+import com.atguigu.common.utils.R;
+import com.atguigu.gulimall.member.vo.MemberLoginVo;
 import com.atguigu.gulimall.member.vo.MemberRegistVo;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.atguigu.common.utils.PageUtils;
@@ -24,5 +26,7 @@ public interface MemberService extends IService<MemberEntity> {
     boolean checkPhoneUnique(@Param("phone") String phone);
 
     boolean checkUserNameUnique(@Param("userName") String userName);
+
+    MemberEntity login(MemberLoginVo vo);
 }
 
