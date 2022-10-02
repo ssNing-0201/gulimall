@@ -25,6 +25,10 @@ spring:
   # 配置redis缓存
   redis:
     host: 127.0.0.1
+  # 指定 Spring session 使用 redis 存储数据
+  session:
+    store-type: redis
+
 
 
 
