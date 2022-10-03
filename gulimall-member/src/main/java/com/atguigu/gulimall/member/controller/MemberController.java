@@ -7,6 +7,7 @@ import com.atguigu.common.exception.BizCodeEnum;
 import com.atguigu.gulimall.member.feign.CouponFeignService;
 import com.atguigu.gulimall.member.vo.MemberLoginVo;
 import com.atguigu.gulimall.member.vo.MemberRegistVo;
+import com.atguigu.gulimall.member.vo.SocialUser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -34,6 +35,12 @@ public class MemberController {
     @Resource
     CouponFeignService couponFeignService;
 
+    @PostMapping("/oauth2/login")
+    public R oauthLogin(@RequestBody SocialUser socialUser){
+        MemberEntity entity = memberService.login(socialUser);
+
+        return R.ok();
+    }
 
     @PostMapping("/login")
     public R login(@RequestBody MemberLoginVo vo){
