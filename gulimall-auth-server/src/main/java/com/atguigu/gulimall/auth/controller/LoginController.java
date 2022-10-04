@@ -1,7 +1,10 @@
 package com.atguigu.gulimall.auth.controller;
 
+import com.alibaba.fastjson.JSON;
+import com.atguigu.common.constant.AuthServerContant;
 import com.atguigu.common.exception.BizCodeEnum;
 import com.atguigu.common.utils.R;
+import com.atguigu.common.vo.MemberRespVo;
 import com.atguigu.gulimall.auth.constant.SendCodeConstant;
 import com.atguigu.gulimall.auth.feign.CheckuserNameAndPhoneFeignService;
 import com.atguigu.gulimall.auth.feign.MemberFeignService;
@@ -13,15 +16,12 @@ import com.mysql.cj.util.StringUtils;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import javax.annotation.Resource;
+import javax.servlet.http.HttpSession;
 import javax.validation.Valid;
 import java.util.HashMap;
 import java.util.Map;
@@ -41,9 +41,14 @@ public class LoginController {
     private MemberFeignService memberFeignService;
 
     @PostMapping("/login")
-    public String login(UserLoginVo vo,RedirectAttributes redirectAttributes){
+    public String login(UserLoginVo vo, RedirectAttributes redirectAttributes, HttpSession session){
         R login = memberFeignService.login(vo);
         if (login.get("code").equals("0")){
+            // 登陆成功数据放到session中
+            Object data = login.get("data");
+            String s = JSON.toJSONString(data);
+            MemberRespVo memberRespVo = JSON.parseObject(s, MemberRespVo.class);
+            session.setAttribute(AuthServerContant.LOGIN_USER,memberRespVo);
             return "redirect:http://gulimall.com";
         }else {
             Map<String ,String> errors = new HashMap<>();
@@ -170,6 +175,16 @@ public class LoginController {
             builder.append(num);
         }
         return builder.toString();
+    }
+    @GetMapping("/login.html")
+    public String loginPage(HttpSession session){
+
+        Object attribute = session.getAttribute(AuthServerContant.LOGIN_USER);
+        if (attribute == null){
+            return "login";
+        }else {
+            return "redirect:http://gulimall.com/";
+        }
     }
 
 }

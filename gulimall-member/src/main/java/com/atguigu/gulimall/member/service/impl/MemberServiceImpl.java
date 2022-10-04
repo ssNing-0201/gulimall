@@ -61,6 +61,7 @@ public class MemberServiceImpl extends ServiceImpl<MemberDao, MemberEntity> impl
         // 用户名手机号是否唯一 (个人认为应该在注册填表单时就验证而不是现在，此时应该验证通过状态，直接提交就好)
         entity.setMobile(vo.getPhone());
         entity.setUsername(vo.getUserName());
+        entity.setNickname(vo.getUserName());
 /*        // 密码使用 MD5 加密
         String pwd = DigestUtils.md5Hex(vo.getPassWord());
         // 盐值加密 随机值
@@ -142,9 +143,10 @@ public class MemberServiceImpl extends ServiceImpl<MemberDao, MemberEntity> impl
             try {
                 ResponseEntity<String> forEntity = restTemplate.getForEntity(url, String.class, new HashMap<>());
                 if (forEntity.getStatusCode().value() == 200) {
-                    JSONObject jsonObject = JSON.parseObject(String.valueOf(forEntity));
+                    JSONObject jsonObject = JSON.parseObject(String.valueOf(forEntity.getBody()));
                     regist.setNickname(String.valueOf(jsonObject.get("name")));
                     regist.setGender("m".equals(String.valueOf(jsonObject.get("gender"))) ? 1 : 0);
+                    regist.setHeader(String.valueOf(jsonObject.get("profile_image_url")));
                 }
             } catch (Exception e) {
                 e.printStackTrace();

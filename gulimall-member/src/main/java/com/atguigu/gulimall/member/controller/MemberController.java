@@ -33,13 +33,18 @@ public class MemberController {
     private MemberService memberService;
 
     @Resource
-    CouponFeignService couponFeignService;
+    private CouponFeignService couponFeignService;
+
 
     @PostMapping("/oauth2/login")
     public R oauthLogin(@RequestBody SocialUser socialUser){
         MemberEntity entity = memberService.login(socialUser);
-
-        return R.ok();
+        if (entity!=null){
+            // 登陆成功
+            return R.ok().put("data",entity);
+        }else {
+            return R.error(BizCodeEnum.LOGINACCT_PWD_EXCEPTION.getCode(), BizCodeEnum.LOGINACCT_PWD_EXCEPTION.getMsg());
+        }
     }
 
     @PostMapping("/login")
@@ -49,7 +54,7 @@ public class MemberController {
             return R.error(BizCodeEnum.LOGINACCT_PWD_EXCEPTION.getCode(), BizCodeEnum.LOGINACCT_PWD_EXCEPTION.getMsg());
         }else {
             // TODO 登陆成功处理
-            return R.ok();
+            return R.ok().put("data",member);
         }
 
     }

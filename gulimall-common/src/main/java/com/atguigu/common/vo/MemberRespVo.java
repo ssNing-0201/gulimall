@@ -18,6 +18,8 @@ public class MemberRespVo implements Serializable {
     private String email; // 邮箱
     private String header; // 头像
     private String gender; // 性别
-
+    private String socialUid;
+    private String accessToken;
+    private String expiresIn;
 
 }
