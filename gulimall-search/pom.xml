@@ -24,6 +24,11 @@
             <artifactId>gulimall-common</artifactId>
             <version>0.0.1-SNAPSHOT</version>
         </dependency>
+        <!--引入redis-->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-redis</artifactId>
+        </dependency>
         <!--引入模版引擎-->
         <dependency>
             <groupId>org.springframework.boot</groupId>

@@ -72,6 +72,11 @@ spring:
           predicates:
               - Host=auth.gulimall.com
 
+        - id: gulimall-cart_route
+          uri: lb://gulimall-cart
+          predicates:
+              - Host=cart.gulimall.com
+
 #         启动失败，注意缩进！！！
 #        - id: produce_route
 #          uri: lb://gulimail-product
