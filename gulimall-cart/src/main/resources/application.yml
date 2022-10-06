@@ -1,0 +1,14 @@
+server:
+  port: 35000
+
+spring:
+  application:
+    name: gulimall-cart
+  cloud:
+    nacos:
+      discovery:
+        server-addr: 127.0.0.1:8848
+  redis:
+    host: 127.0.0.1
+  thymeleaf:
+    cache: false
