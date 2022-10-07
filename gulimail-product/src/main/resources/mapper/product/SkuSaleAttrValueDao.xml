@@ -20,15 +20,20 @@
             <result property="skuIds" column="sku_ids"/>
         </collection>
     </resultMap>
+    <select id="getSkuSaleAttrValuesAsStringList" resultType="String">
+        select concat(attr_name, ":", attr_value)
+        from pms_sku_sale_attr_value
+        where sku_id = #{skuid}
+    </select>
     <select id="getSaleAttrsBySpuId" resultMap="SkuItemSaleAttrsVo">
-        select ssav.attr_id    attr_id,
-               ssav.attr_name  attr_name,
-               ssav.attr_value attr_value,
+        select ssav.attr_id                       attr_id,
+               ssav.attr_name                     attr_name,
+               ssav.attr_value                    attr_value,
                group_concat(distinct info.sku_id) sku_ids
         from pms_sku_info info
                  left join pms_sku_sale_attr_value ssav on ssav.sku_id = info.sku_id
         where info.spu_id = #{spuId}
-        group by ssav.attr_id, ssav.attr_name,ssav.attr_value
+        group by ssav.attr_id, ssav.attr_name, ssav.attr_value
     </select>
 
 </mapper>

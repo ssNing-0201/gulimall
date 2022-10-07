@@ -1,21 +1,20 @@
 package com.atguigu.gulimall.product.app;
 
-import java.util.Arrays;
-import java.util.Map;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import com.atguigu.common.utils.PageUtils;
+import com.atguigu.common.utils.R;
+import com.atguigu.gulimall.product.entity.SkuSaleAttrValueEntity;
+import com.atguigu.gulimall.product.service.SkuSaleAttrValueService;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.atguigu.gulimall.product.entity.SkuSaleAttrValueEntity;
-import com.atguigu.gulimall.product.service.SkuSaleAttrValueService;
-import com.atguigu.common.utils.PageUtils;
-import com.atguigu.common.utils.R;
-
-
+import javax.annotation.Resource;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 
 /**
  * sku????????&ֵ
@@ -27,8 +26,15 @@ import com.atguigu.common.utils.R;
 @RestController
 @RequestMapping("product/skusaleattrvalue")
 public class SkuSaleAttrValueController {
-    @Autowired
+    @Resource
     private SkuSaleAttrValueService skuSaleAttrValueService;
+
+
+    @RequestMapping("/stringlist/{skuid}")
+    public List<String> getSkuSaleAttrValues(@PathVariable("skuid") Long skuid){
+        List<String> list = skuSaleAttrValueService.getSkuSaleAttrValuesAsStringList(skuid);
+        return list;
+    }
 
     /**
      * 列表
