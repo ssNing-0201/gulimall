@@ -5,7 +5,7 @@ import java.util.List;
 
 /**
  * 整个购物车
- *    需要计算的属性，必须重写get方法。
+ * 需要计算的属性，必须重写get方法。
  */
 public class Cart {
     private List<CartItem> items;
@@ -22,26 +22,35 @@ public class Cart {
         this.items = items;
     }
 
+    public Integer setCountNum(){
+        return this.countNum = getCountNum();
+    }
     public Integer getCountNum() {
         int count = 0;
-        if (items!=null&&items.size()>0){
-            for (CartItem item:items){
+        if (items != null && items.size() > 0) {
+            for (CartItem item : items) {
                 count += item.getCount();
             }
         }
         return count;
     }
 
+    public Integer setCountType(){
+        return this.countType = getCountType();
+    }
     public Integer getCountType() {
         return items.size();
     }
-
+    public BigDecimal setTotalAmount(){
+        return this.totalAmount = getTotalAmount();
+    }
     public BigDecimal getTotalAmount() {
-        BigDecimal amount = new BigDecimal("0.00");
+        BigDecimal amount = new BigDecimal(0.00);
         // 计算商品总价
-        if (items!=null&&items.size()>0){
-            for (CartItem item:items){
-                amount.add(item.getTotalPrice());
+        List<CartItem> items = getItems();
+        if (items != null && items.size() > 0) {
+            for (CartItem item : items) {
+                amount = amount.add(item.getTotalPrice());
             }
         }
         // 减去优惠总价
@@ -55,5 +64,16 @@ public class Cart {
 
     public void setReduce(BigDecimal reduce) {
         this.reduce = reduce;
+    }
+
+    @Override
+    public String toString() {
+        return "Cart{" +
+                "items=" + items +
+                ", countNum=" + countNum +
+                ", countType=" + countType +
+                ", totalAmount=" + totalAmount +
+                ", reduce=" + reduce +
+                '}';
     }
 }

@@ -27,7 +27,8 @@
         <ul class="hd_wrap_right">
             <li class="forel">
                 <a th:if="${session.loginUser==null}" href="http://auth.gulimall.com/login.html" class="link_login">你好,请登录</a>&nbsp;
-                <a th:if="${session.loginUser==null}" href="http://auth.gulimall.com/reg.html" class="link_regist">免费注册</a>
+                <a th:if="${session.loginUser==null}" href="http://auth.gulimall.com/reg.html"
+                   class="link_regist">免费注册</a>
                 <a th:if="${session.loginUser!=null}">欢迎：[[${session.loginUser.nickname}]]</a>
             </li>
             <li class="spacer"></li>
@@ -64,7 +65,8 @@
     <div class="success-wrap">
         <div class="w" id="result">
             <div class="m succeed-box">
-                <div class="mc success-cont">
+
+                <div th:if="${item!=null}" class="mc success-cont">
                     <div class="success-lcol">
                         <div class="success-top"><b class="succ-icon"></b>
                             <h3 class="ftx-02">商品已成功加入购物车</h3></div>
@@ -79,7 +81,8 @@
                                     <a th:href="'http://item.gulimall.com/'+${item?.skuId}+'.html'"
                                        th:text="${item?.title}">TCL 55A950C 55英寸32核人工智能 HDR曲面超薄4K电视金属机身（枪色）</a>
                                 </div>
-                                <div class="p-extra"><span class="txt" th:text="'数量：'+${item?.count}">  数量：1</span></div>
+                                <div class="p-extra"><span class="txt" th:text="'数量：'+${item?.count}">  数量：1</span>
+                                </div>
                             </div>
                             <div class="clr"></div>
                         </div>
@@ -97,6 +100,8 @@
                         </div>
                     </div>
                 </div>
+                <div th:if="${item==null}" class="mc success-cont"><h2>购物车中无商品</h2><a
+                        href="http://gulimall.com">返回商城主页</a></div>
             </div>
         </div>
     </div>
