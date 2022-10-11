@@ -12,6 +12,7 @@ import com.atguigu.gulimall.cart.vo.SkuInfoVo;
 import com.atguigu.gulimall.cart.vo.UserInfoTo;
 import com.mysql.cj.util.StringUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.tomcat.util.json.JSONParser;
 import org.jetbrains.annotations.Nullable;
 import org.springframework.data.redis.core.BoundHashOperations;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -180,5 +181,19 @@ public class CartServiceImpl implements CartService {
     public void deleteItem(Long skuId) {
         BoundHashOperations<String, Object, Object> cartOps = getCartOps();
         cartOps.delete(skuId.toString());
+    }
+
+    @Override
+    public List<CartItem> getUserItems() {
+        UserInfoTo userInfoTo = CartInterceptor.threadLocal.get();
+        if (userInfoTo.getUserId()==null){
+            return null;
+        }else {
+            String cartKey = CART_PREFIX + userInfoTo.getUserId();
+            List<CartItem> items = getCart(cartKey);
+            //  获取被选中的购物项
+            List<CartItem> collect = items.stream().filter(item -> item.getCheck()).collect(Collectors.toList());
+            return collect;
+        }
     }
 }

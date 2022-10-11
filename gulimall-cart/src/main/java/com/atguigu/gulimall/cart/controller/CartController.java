@@ -15,6 +15,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpSession;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 @Controller
@@ -22,6 +23,12 @@ public class CartController {
 
     @Resource
     private CartService cartService;
+
+    @GetMapping("/getUserItems")
+    public List<CartItem> getUserItems(){
+
+        return cartService.getUserItems();
+    }
 
 
     @GetMapping("/deleteItem")

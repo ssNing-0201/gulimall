@@ -50,7 +50,9 @@ public class Cart {
         List<CartItem> items = getItems();
         if (items != null && items.size() > 0) {
             for (CartItem item : items) {
-                amount = amount.add(item.getTotalPrice());
+                if (item.getCheck()){
+                    amount = amount.add(item.getTotalPrice());
+                }
             }
         }
         // 减去优惠总价
