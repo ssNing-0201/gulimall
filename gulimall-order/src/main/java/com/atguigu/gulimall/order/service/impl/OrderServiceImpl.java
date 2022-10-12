@@ -1,11 +1,23 @@
 package com.atguigu.gulimall.order.service.impl;
 
 import com.atguigu.common.vo.MemberRespVo;
+import com.atguigu.gulimall.order.feign.CartFeignService;
 import com.atguigu.gulimall.order.feign.MemberFeignService;
+import com.atguigu.gulimall.order.feign.WmsFeignService;
 import com.atguigu.gulimall.order.interceptor.LoginUserInterceptor;
+import com.atguigu.gulimall.order.vo.MemberAddressVo;
 import com.atguigu.gulimall.order.vo.OrderConfirmVo;
+import com.atguigu.gulimall.order.vo.OrderItemVo;
+import com.atguigu.gulimall.order.vo.SkuHasStockVo;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.stream.Collectors;
+
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -15,6 +27,8 @@ import com.atguigu.common.utils.Query;
 import com.atguigu.gulimall.order.dao.OrderDao;
 import com.atguigu.gulimall.order.entity.OrderEntity;
 import com.atguigu.gulimall.order.service.OrderService;
+import org.springframework.web.context.request.RequestAttributes;
+import org.springframework.web.context.request.RequestContextHolder;
 
 import javax.annotation.Resource;
 
@@ -24,6 +38,12 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
 
     @Resource
     private MemberFeignService memberFeignService;
+    @Resource
+    private CartFeignService cartFeignService;
+    @Resource
+    private ThreadPoolExecutor threadPoolExecutor;
+    @Resource
+    private WmsFeignService wmsFeignService;
 
     @Override
     public PageUtils queryPage(Map<String, Object> params) {
@@ -36,13 +56,52 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
     }
 
     @Override
-    public OrderConfirmVo confirmOrder() {
+    public OrderConfirmVo confirmOrder() throws ExecutionException, InterruptedException {
         OrderConfirmVo orderConfirmVo = new OrderConfirmVo();
         MemberRespVo memberRespVo = LoginUserInterceptor.loginUser.get();
-        // 远程查询所有的收货地址
-        memberFeignService.getAddress(memberRespVo.getId());
-        // 远程查询购物车内的购物项
+        // 启用多线程，获取主线程请求头数据，给每个线程保存一份，方便异步调用时有用户登陆信息。
+        RequestAttributes requestAttributes = RequestContextHolder.getRequestAttributes();
+        CompletableFuture<Void> getAddress = CompletableFuture.runAsync(() -> {
+            // 远程查询所有的收货地址
+            RequestContextHolder.setRequestAttributes(requestAttributes);
+            List<MemberAddressVo> address = memberFeignService.getAddress(memberRespVo.getId());
+            orderConfirmVo.setAddress(address);
+        }, threadPoolExecutor);
 
+        CompletableFuture<Void> getCart = CompletableFuture.runAsync(() -> {
+            // 远程查询购物车内的购物项
+            RequestContextHolder.setRequestAttributes(requestAttributes);
+            List<OrderItemVo> userItems = cartFeignService.getUserItems();
+            orderConfirmVo.setItems(userItems);
+        }, threadPoolExecutor).thenRunAsync(()->{
+            RequestContextHolder.setRequestAttributes(requestAttributes);
+            List<OrderItemVo> items = orderConfirmVo.getItems();
+            List<Long> skuIds = items.stream().map(item -> item.getSkuId()).collect(Collectors.toList());
+            List<SkuHasStockVo> skusHasStock = wmsFeignService.getSkusHasStock(skuIds);
+            if (skusHasStock!=null){
+                Map<Long, Boolean> collect = skusHasStock.stream().collect(Collectors.toMap(SkuHasStockVo::getSkuId, SkuHasStockVo::getHasStock));
+                orderConfirmVo.setStocks(collect);
+            }
+        },threadPoolExecutor);
+
+        CompletableFuture<Void> getOther = CompletableFuture.runAsync(() -> {
+            // 远程查询用户优惠券信息（此处直接使用了用户积分）
+            RequestContextHolder.setRequestAttributes(requestAttributes);
+            Integer integration = memberRespVo.getIntegration();
+            if (integration==null){
+                orderConfirmVo.setIntegration(0);
+            }else {
+                orderConfirmVo.setIntegration(integration);
+            }
+
+            // 封装价格
+            orderConfirmVo.setTotal();
+            orderConfirmVo.setPayPrice();
+        }, threadPoolExecutor);
+        // 等所有异步任务完成，返回对象
+        CompletableFuture.allOf(getAddress, getCart, getOther).get();
+
+        // TODO 防重令牌
         return orderConfirmVo;
     }
 

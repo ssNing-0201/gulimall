@@ -17,7 +17,7 @@
     </update>
 
     <select id="getSkuStock" resultType="java.lang.Long">
-        select sun(stock-stock_lockes) from wms_ware_sku where sku_id=#{skuId}
+        select (stock-stock_locked) from wms_ware_sku where sku_id=#{skuId}
     </select>
 
 </mapper>

@@ -21,5 +21,6 @@ public class MemberRespVo implements Serializable {
     private String socialUid;
     private String accessToken;
     private String expiresIn;
+    private Integer integration; // 积分
 
 }

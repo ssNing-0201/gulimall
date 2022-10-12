@@ -6,6 +6,7 @@ import com.atguigu.common.utils.PageUtils;
 import com.atguigu.gulimall.order.entity.OrderEntity;
 
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
 
 /**
  * ????
@@ -20,7 +21,7 @@ public interface OrderService extends IService<OrderEntity> {
     /**
      * 订单确认页所需返回信息
      */
-    OrderConfirmVo confirmOrder();
+    OrderConfirmVo confirmOrder() throws ExecutionException, InterruptedException;
 
 }
 

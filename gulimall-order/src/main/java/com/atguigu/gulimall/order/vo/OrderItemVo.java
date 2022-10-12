@@ -15,4 +15,7 @@ public class OrderItemVo {
     private BigDecimal price;
     private Integer count;
     private BigDecimal totalPrice;
+
+    // 重量
+    private BigDecimal weight;
 }

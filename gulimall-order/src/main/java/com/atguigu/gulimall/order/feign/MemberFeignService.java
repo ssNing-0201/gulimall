@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 
 import java.util.List;
 
-@FeignClient
+@FeignClient("gulimall-member")
 public interface MemberFeignService {
 
     @GetMapping("/member/memberreceiveaddress/getaddress/{memberId}")

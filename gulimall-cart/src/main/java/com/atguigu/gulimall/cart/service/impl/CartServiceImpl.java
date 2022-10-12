@@ -19,6 +19,7 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -134,6 +135,9 @@ public class CartServiceImpl implements CartService {
             List<CartItem> collect= values.stream().map(obj -> {
                 String str = String.valueOf(obj);
                 CartItem cartItem = JSON.parseObject(str, CartItem.class);
+                // 调用时，实时更新价格数据
+                BigDecimal price = productFeignService.getPrice(cartItem.getSkuId());
+                cartItem.setPrice(price);
                 return cartItem;
             }).collect(Collectors.toList());
             return collect;
