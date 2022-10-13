@@ -1,21 +1,22 @@
 package com.atguigu.gulimall.order.service.impl;
 
+import com.atguigu.common.constant.OrderConstant;
 import com.atguigu.common.vo.MemberRespVo;
 import com.atguigu.gulimall.order.feign.CartFeignService;
 import com.atguigu.gulimall.order.feign.MemberFeignService;
 import com.atguigu.gulimall.order.feign.WmsFeignService;
 import com.atguigu.gulimall.order.interceptor.LoginUserInterceptor;
-import com.atguigu.gulimall.order.vo.MemberAddressVo;
-import com.atguigu.gulimall.order.vo.OrderConfirmVo;
-import com.atguigu.gulimall.order.vo.OrderItemVo;
-import com.atguigu.gulimall.order.vo.SkuHasStockVo;
+import com.atguigu.gulimall.order.vo.*;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
@@ -44,6 +45,8 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
     private ThreadPoolExecutor threadPoolExecutor;
     @Resource
     private WmsFeignService wmsFeignService;
+    @Resource
+    private StringRedisTemplate stringRedisTemplate;
 
     @Override
     public PageUtils queryPage(Map<String, Object> params) {
@@ -102,7 +105,20 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
         CompletableFuture.allOf(getAddress, getCart, getOther).get();
 
         // TODO 防重令牌
+        String uuid = UUID.randomUUID().toString().replace("-","");
+        orderConfirmVo.setOrderToken(uuid);
+        stringRedisTemplate.opsForValue().set(OrderConstant.USER_ORDER_TOKEN_PREFIX+memberRespVo.getId(),uuid,30, TimeUnit.MINUTES);
+
         return orderConfirmVo;
+    }
+
+    @Override
+    public SubmitOrderResponseVo submitOrder(OrderSubmitVo vo) {
+
+        //创建订单，验令牌，验价格，锁库存
+
+
+        return null;
     }
 
 }

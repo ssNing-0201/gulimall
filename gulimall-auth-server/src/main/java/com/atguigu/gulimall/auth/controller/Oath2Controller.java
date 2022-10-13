@@ -52,7 +52,6 @@ public class Oath2Controller {
                 Object data = oauthLogin.get("data");
                 String s = JSON.toJSONString(data);
                 MemberRespVo memberResponseVo = JSON.parseObject(s, MemberRespVo.class);
-                System.out.println("登陆成功"+memberResponseVo.toString());
                 session.setAttribute("loginUser",memberResponseVo);
                 return "redirect:http://gulimall.com";
             } else {

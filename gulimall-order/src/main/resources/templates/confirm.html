@@ -354,8 +354,9 @@
     </div>
 
     <!--地址-->
-    <div class="top-3" th:each="addr:${OrderConfirmData.address}">
-        <p th:text="${addr.name}"></p>家里<span th:text="${addr.name}+${addr.province}+${addr.detailAddress}+${addr.phone}">齐天大圣  北京市  昌平区城区晨曦小区-16号楼 吉利大学  150****2245</span>
+    <div class="top-3 addr-item" th:each="addr:${OrderConfirmData.address}">
+        <p th:attr="def=${addr.defaultStatus},addrId=${addr.id}" th:text="${addr.name}"></p><span
+            th:text="${addr.name}+${addr.province}+${addr.detailAddress}+${addr.phone}">齐天大圣  北京市  昌平区城区晨曦小区-16号楼 吉利大学  150****2245</span>
     </div>
     <p class="p2">更多地址︾</p>
     <div class="hh1"/>
@@ -431,7 +432,8 @@
         <div class="yun1" th:each="item:${OrderConfirmData.items}">
             <img style="width: 50px;height: 80px" th:src="${item.image}" class="yun"/>
             <div class="mi">
-                <p>[[${item.title}]] <span style="color: red;"> ￥ [[${#numbers.formatDecimal(item.price,1,2)}]]</span> <span> x[[${item.count}]] </span> <span>[[${OrderConfirmData.stocks[item.skuId]?"有货":"无货"}]]</span>
+                <p>[[${item.title}]] <span style="color: red;"> ￥ [[${#numbers.formatDecimal(item.price,1,2)}]]</span>
+                    <span> x[[${item.count}]] </span> <span>[[${OrderConfirmData.stocks[item.skuId]?"有货":"无货"}]]</span>
                 </p>
                 <p><span>0.095kg</span></p>
                 <p class="tui-1"><img src="/static/order/confirm/img/i_07.png"/>支持7天无理由退货</p>
@@ -482,7 +484,7 @@
         </p>
         <p class="qian_y">
             <span>运费： </span>
-            <span class="rmb"> &nbsp ￥0.00</span>
+            <span class="rmb" id="fare"> &nbsp ￥0.00</span>
         </p>
         <p class="qian_y">
             <span>服务费： </span>
@@ -496,10 +498,19 @@
     </div>
 
     <div class="yfze">
-        <p class="yfze_a"><span class="z">应付总额：</span><span class="hq">￥[[${OrderConfirmData.payPrice}]]</span></p>
-        <p class="yfze_b">寄送至： 北京 朝阳区 三环到四环之间 朝阳北路复兴国际大厦23层麦田房产 IT-中心研发二部 收货人：赵存权 188****5052</p>
+        <p class="yfze_a"><span class="z">应付总额：</span><span class="hq">￥[[${#numbers.formatDecimal(OrderConfirmData.payPrice,1,2)}]]</span>
+        </p>
+        <p class="yfze_b" id="address">寄送至： 北京 朝阳区 三环到四环之间 朝阳北路复兴国际大厦23层麦田房产 IT-中心研发二部 收货人：赵存权 188****5052</p>
     </div>
-    <button class="tijiao">提交订单</button>
+    <input type="hidden" name="orderToken" th:value="${OrderConfirmData.orderToken}">
+    <form action="http://order.gulimall.com/submitOrder" method="post">
+        <input id="addrIdInput" type="hidden" name="addrId">
+        <input type="hidden" name="payType" th:value="001">
+        <input type="hidden" name="orderToken" th:value="${OrderConfirmData.orderToken}">
+        <input id="payPriceInput" type="hidden" name="payPrice" >
+        <button class="tijiao" type="submit">提交订单</button>
+    </form>
+
 </div>
 </div>
 
@@ -732,8 +743,47 @@
         }, function () {
             $('.h-r-1').css('display', 'none')
         })
+        hightLight();
+        var addrId = $(".addr-item p[def='1']").attr("addrId");
+        getFare(addrId);
     })
 
+    function hightLight() {
+        $(".addr-item p").css({"border": "2px solid gray"});
+        $(".addr-item p[def='1']").css({"border": "2px solid red"});
+    }
+
+    $(".addr-item p").click(function () {
+        $(".addr-item p").attr("def", 0);
+        $(this).attr("def", 1);
+        hightLight();
+        // 获取当前地址id
+        var addrId = $(this).attr("addrId");
+        // 发送ajax获取运费信息
+        getFare(addrId);
+    });
+
+    function getFare(addrId) {
+        $("#addrIdInput").val(addrId);
+        $.ajax({
+            url: "http://gulimall.com/api/ware/wareinfo/fare",
+            data: {"addrId": addrId},
+            type: "get",
+            dataType: "json",
+            success: function (data) {
+                console.log(data);
+                if (data.code == 0) {
+                    var total = [[${#numbers.formatDecimal(OrderConfirmData.payPrice,1,2)}]]
+                    var payPrice = total * 1 + data.data.fare * 1;
+                    $("#payPriceInput").val(payPrice);
+
+                    $("#fare").text(data.data.fare);
+                    var address = "寄送至：" + data.data.address.province + " " + data.data.address.detailAddress + " 收货人：" + data.data.address.name + " " + data.data.address.phone;
+                    $("#address").text(address);
+                }
+            }
+        })
+    }
 
 </script>
 </body>
