@@ -28,6 +28,6 @@ public interface OrderService extends IService<OrderEntity> {
     /**
      * 下单
      */
-    SubmitOrderResponseVo submitOrder(OrderSubmitVo vo);
+    SubmitOrderResponseVo submitOrder(OrderSubmitVo vo) throws ExecutionException, InterruptedException;
 }
 

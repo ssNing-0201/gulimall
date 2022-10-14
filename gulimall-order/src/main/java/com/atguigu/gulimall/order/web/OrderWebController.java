@@ -30,12 +30,9 @@ public class OrderWebController {
      * 下单功能
      */
     @PostMapping("/submitOrder")
-    public String submitOrder(OrderSubmitVo vo){
-
-        SubmitOrderResponseVo responseVo = orderService.submitOrder(vo);
-
+    public String submitOrder(OrderSubmitVo vo) throws ExecutionException, InterruptedException {
         // 去创建订单，验令牌，验价格，锁库存
-
+        SubmitOrderResponseVo responseVo = orderService.submitOrder(vo);
         if (responseVo.getCode()==0){
             // 下单成功 ，来到支付选择页面
             return "redirect:http://order.gulimall.com/pay.html";

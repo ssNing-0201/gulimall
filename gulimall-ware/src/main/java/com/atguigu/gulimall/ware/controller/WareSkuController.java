@@ -4,7 +4,9 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+import com.atguigu.gulimall.ware.vo.LockStockResult;
 import com.atguigu.gulimall.ware.vo.SkuHasStockVo;
+import com.atguigu.gulimall.ware.vo.WareSkuLockVo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -29,6 +31,12 @@ public class WareSkuController {
     private WareSkuService wareSkuService;
 
 
+    @PostMapping("/lock/order")
+    public R OrderLockStock(@RequestBody WareSkuLockVo vo){
+        List<LockStockResult> result = wareSkuService.OrderLockStock(vo);
+        return R.ok().put("data",result);
+    }
+
     // 查询sku是否有库存
     @PostMapping("/hasstock")
     public List<SkuHasStockVo> getSkusHasStock(@RequestBody List<Long> skuIds){
@@ -36,7 +44,6 @@ public class WareSkuController {
 
         return vos;
     }
-
     /**
      * 列表
      */

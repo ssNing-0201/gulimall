@@ -219,7 +219,7 @@ public class SpuInfoServiceImpl extends ServiceImpl<SpuInfoDao, SpuInfoEntity> i
         // 查出当前spuid包含sku信息
         List<SkuInfoEntity> skus = skuInfoService.getSkusBySpuId(spuId);
 
-        //TODO 4、查询当前sku的所有可以被用来检索的规格属性
+        // 4、查询当前sku的所有可以被用来检索的规格属性
         List<ProductAttrValueEntity> baseAttrs = productAttrValueService.baseAttrListforspu(spuId);
         List<Long> attrIds = baseAttrs.stream().map(attr -> {
             return attr.getAttrId();
@@ -234,7 +234,7 @@ public class SpuInfoServiceImpl extends ServiceImpl<SpuInfoDao, SpuInfoEntity> i
             BeanUtils.copyProperties(item, attrs1);
             return attrs1;
         }).collect(Collectors.toList());
-        //TODO 1、发送远程调用，库存系统查询是否有库存
+        // 1、发送远程调用，库存系统查询是否有库存
         List<Long> skuIdList = skus.stream().map(SkuInfoEntity::getSkuId).collect(Collectors.toList());
         Map<Long, Boolean> stockMap = new HashMap<>();
         try {
@@ -259,9 +259,9 @@ public class SpuInfoServiceImpl extends ServiceImpl<SpuInfoDao, SpuInfoEntity> i
                 esModel.setHasStock(true);
             }
 
-            //TODO 2、热度评分，默认0。
+            // 2、热度评分，默认0。
             esModel.setHotScore(0L);
-            //TODO 3、查询品牌和分类的名字信息
+            // 3、查询品牌和分类的名字信息
             BrandEntity brand = brandService.getById(esModel.getBrandId());
 
 
@@ -282,12 +282,21 @@ public class SpuInfoServiceImpl extends ServiceImpl<SpuInfoDao, SpuInfoEntity> i
         Integer code = (Integer) r.get("code");
         if (code==0){
             // 远程调用成功
-            // TODO 6、改变商品状态
+            // 6、改变商品状态
             this.baseMapper.updateSpuStatus(spuId, ProductConstant.StatusEnum.UP_SPU.getCode());
         }else {
             // 远程调用失败
             // TODO 7、重复调用问题（接口幂等性）调用失败是否重新调用一次，重试机制？
         }
+    }
+
+    @Override
+    public SpuInfoEntity getSpuBySku(Long skuId) {
+
+        SkuInfoEntity byId = skuInfoService.getById(skuId);
+        Long spuId = byId.getSpuId();
+        SpuInfoEntity entity = getById(spuId);
+        return entity;
     }
 
 
