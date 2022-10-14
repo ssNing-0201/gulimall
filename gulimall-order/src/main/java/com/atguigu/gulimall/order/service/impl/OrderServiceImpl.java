@@ -168,7 +168,6 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
                 }else {
                     // 锁失败了
                 }
-
             }else {
                 // 金额对比失败
                 responseVo.setCode(2);
