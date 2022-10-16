@@ -47,7 +47,6 @@ public class WareSkuController {
     @PostMapping("/hasstock")
     public List<SkuHasStockVo> getSkusHasStock(@RequestBody List<Long> skuIds){
         List<SkuHasStockVo> vos = wareSkuService.getSkusHasStock(skuIds);
-
         return vos;
     }
     /**

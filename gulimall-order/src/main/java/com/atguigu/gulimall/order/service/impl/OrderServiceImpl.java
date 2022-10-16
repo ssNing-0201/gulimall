@@ -2,9 +2,9 @@ package com.atguigu.gulimall.order.service.impl;
 
 import com.alibaba.fastjson.JSON;
 import com.atguigu.common.constant.OrderConstant;
+import com.atguigu.common.exception.NoStockException;
 import com.atguigu.common.utils.R;
 import com.atguigu.common.vo.MemberRespVo;
-import com.atguigu.gulimall.order.dao.OrderItemDao;
 import com.atguigu.gulimall.order.entity.OrderItemEntity;
 import com.atguigu.gulimall.order.enume.OrderStatusEnum;
 import com.atguigu.gulimall.order.feign.CartFeignService;
@@ -133,6 +133,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
     public SubmitOrderResponseVo submitOrder(OrderSubmitVo vo) throws ExecutionException, InterruptedException {
         MemberRespVo memberRespVo = LoginUserInterceptor.loginUser.get();
         SubmitOrderResponseVo responseVo = new SubmitOrderResponseVo();
+        responseVo.setCode(0);
         // 创建订单，验令牌，验价格，锁库存
         // 验证令牌「令牌的对比和删除必须保证原子性」
         // 使用lua脚本 返回值 0 表示令牌失败，返回值 1 表示对比成功，删除成功
@@ -162,11 +163,15 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
                 }).collect(Collectors.toList());
                 lockVo.setOrderSn(order.getOrder().getOrderSn());
                 lockVo.setLooks(collect);
+                //TODO 远程锁库存
                 R r = wmsFeignService.OrderLockStock(lockVo);
                 if (r.get("code").toString().equals("0")){
                     // 锁成功了
+                    responseVo.setOrder(order.getOrder());
+                    return responseVo;
                 }else {
                     // 锁失败了
+                    throw new NoStockException((Long) r.get("error"));
                 }
             }else {
                 // 金额对比失败
@@ -178,7 +183,6 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
             responseVo.setCode(1);
             return responseVo;
         }
-        return responseVo;
     }
 
     /**
@@ -204,7 +208,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
         // 获取收获地址信息
         CompletableFuture<Void> fareOrder = CompletableFuture.runAsync(() -> {
             RequestContextHolder.setRequestAttributes(requestAttributes);
-            createTo.setOrder(buildOrder(vo, orderSn));
+            createTo.setOrder(buildOrder(vo, orderSn,memberRespVo));
         }, threadPoolExecutor);
         // 订单项
         CompletableFuture<Void> itemsOrder = CompletableFuture.runAsync(() -> {
@@ -248,13 +252,12 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
 
     }
 
-    private OrderEntity buildOrder(OrderSubmitVo vo, String orderSn) {
+    private OrderEntity buildOrder(OrderSubmitVo vo, String orderSn, MemberRespVo memberRespVo) {
         R fare = wmsFeignService.getFare(vo.getAddrId());
         OrderEntity entity = new OrderEntity();
-        MemberRespVo memberRespVo = LoginUserInterceptor.loginUser.get();
         entity.setMemberId(memberRespVo.getId());
         entity.setOrderSn(orderSn);
-        String s = JSON.toJSONString(fare);
+        String s = JSON.toJSONString(fare.get("data"));
         FareVo fareVo = JSON.parseObject(s, FareVo.class);
         // 运费
         entity.setFreightAmount(fareVo.getFare());
@@ -278,7 +281,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
         List<OrderItemVo> items = cartFeignService.getUserItems();
         if (items != null && items.size() > 0) {
             orderItems = items.stream().map(cartItem -> {
-                OrderItemEntity itemEntity = null;
+                OrderItemEntity itemEntity = new OrderItemEntity();
                 try {
                     itemEntity = buildOrderItem(cartItem,orderSn);
                 } catch (ExecutionException e) {
@@ -298,15 +301,16 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
         // 订单信息
         itemEntity.setOrderSn(orderSn);
         // spu信息
-        CompletableFuture<Void> spuOrder = CompletableFuture.runAsync(() -> {
-            R spu = productFeignService.getSpuBySku(item.getSkuId());
-            String s1 = JSON.toJSONString(spu.get(spu));
-            SpuInfoVo spuVo = JSON.parseObject(s1, SpuInfoVo.class);
-            itemEntity.setSpuId(spuVo.getId());
-            itemEntity.setSpuName(spuVo.getSpuName());
-            itemEntity.setSpuBrand(spuVo.getBrandId().toString());
-            itemEntity.setCategoryId(spuVo.getCatalogId());
-        }, threadPoolExecutor);
+        R spu = productFeignService.getSpuBySku(item.getSkuId());
+        String s1 = JSON.toJSONString(spu.get("spu"));
+        SpuInfoVo spuVo = JSON.parseObject(s1, SpuInfoVo.class);
+        itemEntity.setSpuId(spuVo.getId());
+        itemEntity.setSpuName(spuVo.getSpuName());
+        itemEntity.setSpuBrand(spuVo.getBrandId().toString());
+        itemEntity.setCategoryId(spuVo.getCatalogId());
+//        CompletableFuture<Void> spuOrder = CompletableFuture.runAsync(() -> {
+//
+//        }, threadPoolExecutor);
         // sku信息
         itemEntity.setSkuId(item.getSkuId());
         itemEntity.setSkuName(item.getTitle());
@@ -319,10 +323,11 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
         itemEntity.setPromotionAmount(new BigDecimal(0.00));
         itemEntity.setRealAmount(new BigDecimal(0.00));
         itemEntity.setCouponAmount(new BigDecimal(0.00));
+        itemEntity.setIntegrationAmount(new BigDecimal(0.00));
         // 积分信息
         itemEntity.setGiftGrowth(item.getTotalPrice().intValue());
         itemEntity.setGiftIntegration(item.getTotalPrice().intValue());
-        CompletableFuture.allOf(spuOrder).get();
+//        CompletableFuture.allOf(spuOrder).get();
         //TODO 订单项价格信息(总价),没做优惠信息，所以这里算总价没计入优惠价格
         BigDecimal multiply = item.getPrice().multiply(new BigDecimal(item.getCount()));
         itemEntity.setRealAmount(multiply);
