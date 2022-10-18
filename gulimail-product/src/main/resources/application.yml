@@ -43,5 +43,25 @@ logging:
   level:
     com.atguigu.gulimall: debug
 
-
+seata:
+  enabled: true
+  enable-auto-data-source-proxy: true
+  config:
+    type: nacos
+    nacos:
+      server-addr: 127.0.0.1:8848
+      namespace: d85ff827-c1c8-44e5-b3af-132a74392e27
+      data-id: seataServer.Properties
+      group: SEATA_GROUP
+      username: nacos
+      password: nacos
+  registry:
+    type: nacos
+    nacos:
+      application: seata-server
+      server-addr: 127.0.0.1:8848
+      group: SEATA_GROUP
+      namespace: d85ff827-c1c8-44e5-b3af-132a74392e27
+      username: nacos
+      password: nacos
 
