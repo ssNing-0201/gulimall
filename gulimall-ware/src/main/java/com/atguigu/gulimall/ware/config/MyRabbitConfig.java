@@ -13,10 +13,10 @@ import java.util.Map;
 @Configuration
 public class MyRabbitConfig {
 
-    @RabbitListener(queues = "stock.release.stock.queue")
-    public void handle(Message message){
-
-    }
+//    @RabbitListener(queues = "stock.release.stock.queue")
+//    public void handle(Message message){
+//
+//    }
     // 使用Json序列化机制进行消息转换
     @Bean
     public MessageConverter messageConverter(){
@@ -38,7 +38,7 @@ public class MyRabbitConfig {
         Map<String,Object> arguments = new HashMap<>();
         arguments.put("x-dead-letter-exchange","stock-event-exchange");
         arguments.put("x-dead-letter-routing-key","stock.release");
-        arguments.put("x-message-ttl",60000);
+        arguments.put("x-message-ttl",120000);
         Queue queue = new Queue("stock.delay.queue", true, false, false,arguments);
         return queue;
     }

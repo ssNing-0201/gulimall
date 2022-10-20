@@ -3,6 +3,7 @@ package com.atguigu.gulimall.order.service.impl;
 import com.alibaba.fastjson.JSON;
 import com.atguigu.common.constant.OrderConstant;
 import com.atguigu.common.exception.NoStockException;
+import com.atguigu.common.to.mq.OrderTo;
 import com.atguigu.common.utils.R;
 import com.atguigu.common.vo.MemberRespVo;
 import com.atguigu.gulimall.order.entity.OrderItemEntity;
@@ -18,6 +19,8 @@ import com.atguigu.gulimall.order.vo.*;
 import com.baomidou.mybatisplus.core.toolkit.IdWorker;
 import io.seata.spring.annotation.GlobalTransactional;
 import org.jetbrains.annotations.NotNull;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.beans.BeanUtils;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Service;
@@ -64,6 +67,8 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
     private ProductFeignService productFeignService;
     @Resource
     private OrderItemService orderItemService;
+    @Resource
+    private RabbitTemplate rabbitTemplate;
 
     @Override
     public PageUtils queryPage(Map<String, Object> params) {
@@ -128,6 +133,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
 
         return orderConfirmVo;
     }
+
     @GlobalTransactional // 开启 seata 全局事物
     @Transactional
     @Override
@@ -149,7 +155,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
             // 2、验价
             BigDecimal payAmount = order.getOrder().getPayAmount();
             BigDecimal payPrice = vo.getPayPrice();
-            if (Math.abs(payAmount.subtract(payPrice).doubleValue())<0.01){
+            if (Math.abs(payAmount.subtract(payPrice).doubleValue()) < 0.01) {
                 // 金额对比成功
                 // 保存订单
                 saveOrder(order);
@@ -166,15 +172,17 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
                 lockVo.setLooks(collect);
                 //TODO 远程锁库存
                 R r = wmsFeignService.OrderLockStock(lockVo);
-                if (r.get("code").toString().equals("0")){
+                if (r.get("code").toString().equals("0")) {
                     // 锁成功了
                     responseVo.setOrder(order.getOrder());
+                    // TODO 订单创建成功，发送消息给MQ
+                    rabbitTemplate.convertAndSend("order-event-exchange", "order.create.order",order.getOrder() );
                     return responseVo;
-                }else {
+                } else {
                     // 锁失败了
                     throw new NoStockException((Long) r.get("error"));
                 }
-            }else {
+            } else {
                 // 金额对比失败
                 responseVo.setCode(2);
                 return responseVo;
@@ -186,10 +194,37 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
         }
     }
 
+    @Override
+    public OrderEntity getOrderByOrderSn(String orderSn) {
+        OrderEntity order_sn = this.getOne(new QueryWrapper<OrderEntity>().eq("order_sn", orderSn));
+        return order_sn;
+    }
+
+    /**
+     * 关闭超时订单
+     */
+    @Override
+    public void closeOrder(OrderEntity entity) {
+        // 关闭订单前先查询订单最新状态
+        OrderEntity orderEntity = this.getById(entity.getId());
+        if (orderEntity.getStatus() == OrderStatusEnum.CREATE_NEW.getCode()) {
+            OrderEntity updateEntity = new OrderEntity();
+            updateEntity.setId(orderEntity.getId());
+            updateEntity.setStatus(OrderStatusEnum.CANCLED.getCode());
+            this.updateById(updateEntity);
+            // 发给 MQ 一个关闭订单的信息
+            OrderTo orderTo = new OrderTo();
+            BeanUtils.copyProperties(orderEntity,orderTo);
+            rabbitTemplate.convertAndSend("order-event-exchange","order.release.other.#",orderTo);
+        }
+
+
+    }
+
     /**
      * 保存订单数据
      */
-    private void  saveOrder(OrderCreateTo order) {
+    private void saveOrder(OrderCreateTo order) {
 
         OrderEntity orderEntity = order.getOrder();
         orderEntity.setModifyTime(new Date());
@@ -209,14 +244,14 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
         // 获取收获地址信息
         CompletableFuture<Void> fareOrder = CompletableFuture.runAsync(() -> {
             RequestContextHolder.setRequestAttributes(requestAttributes);
-            createTo.setOrder(buildOrder(vo, orderSn,memberRespVo));
+            createTo.setOrder(buildOrder(vo, orderSn, memberRespVo));
         }, threadPoolExecutor);
         // 订单项
         CompletableFuture<Void> itemsOrder = CompletableFuture.runAsync(() -> {
             RequestContextHolder.setRequestAttributes(requestAttributes);
             createTo.setOrderItems(buildOrderItems(orderSn));
         }, threadPoolExecutor);
-        CompletableFuture.allOf(fareOrder,itemsOrder).get();
+        CompletableFuture.allOf(fareOrder, itemsOrder).get();
         // 验价
         computePrice(createTo);
         return createTo;
@@ -231,7 +266,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
         Integer gift = 0;
         Integer growth = 0;
         // 订单总额
-        for (OrderItemEntity item:items){
+        for (OrderItemEntity item : items) {
             total = total.add(item.getRealAmount());
             couponAmount = couponAmount.add(item.getCouponAmount());
             integrationAmount = integrationAmount.add(item.getIntegrationAmount());
@@ -277,14 +312,14 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
         return entity;
     }
 
-    private List<OrderItemEntity> buildOrderItems(String orderSn){
+    private List<OrderItemEntity> buildOrderItems(String orderSn) {
         List<OrderItemEntity> orderItems = new ArrayList<>();
         List<OrderItemVo> items = cartFeignService.getUserItems();
         if (items != null && items.size() > 0) {
             orderItems = items.stream().map(cartItem -> {
                 OrderItemEntity itemEntity = new OrderItemEntity();
                 try {
-                    itemEntity = buildOrderItem(cartItem,orderSn);
+                    itemEntity = buildOrderItem(cartItem, orderSn);
                 } catch (ExecutionException e) {
                     e.printStackTrace();
                 } catch (InterruptedException e) {
