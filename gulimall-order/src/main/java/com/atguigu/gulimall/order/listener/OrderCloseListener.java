@@ -23,6 +23,8 @@ public class OrderCloseListener {
         System.out.println("收到过期订单信息，准备关闭订单");
         try {
             orderService.closeOrder(entity);
+            // 手动调用支付宝收单
+
             channel.basicAck(message.getMessageProperties().getDeliveryTag(),false);
         }catch (Exception e){
             channel.basicReject(message.getMessageProperties().getDeliveryTag(),true);

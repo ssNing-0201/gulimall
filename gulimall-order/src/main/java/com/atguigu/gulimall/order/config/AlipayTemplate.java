@@ -13,7 +13,7 @@ import org.springframework.stereotype.Component;
 
 
 @Component
-
+@Data
 public class AlipayTemplate {
 
     //在支付宝创建的应用的id
@@ -63,11 +63,13 @@ public class AlipayTemplate {
         String subject = vo.getSubject();
         //商品描述，可空
         String body = vo.getBody();
-
+        // 支付时间限制，超时后无法支付
+        String time  = "1m";
         alipayRequest.setBizContent("{\"out_trade_no\":\"" + out_trade_no + "\","
                 + "\"total_amount\":\"" + total_amount + "\","
                 + "\"subject\":\"" + subject + "\","
                 + "\"body\":\"" + body + "\","
+                + "\"timeout_express\":\"" + time + "\","
                 + "\"product_code\":\"FAST_INSTANT_TRADE_PAY\"}");
 
         String result = alipayClient.pageExecute(alipayRequest).getBody();

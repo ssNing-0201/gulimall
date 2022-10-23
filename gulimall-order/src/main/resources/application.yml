@@ -4,6 +4,8 @@ server:
 spring:
   main:
     allow-circular-references: true
+  mvc:
+    date-format: yyyy-MM-dd HH:mm:ss
   application:
     name: gulimall-order
   datasource:
@@ -15,6 +17,8 @@ spring:
     nacos:
       discovery:
         server-addr: 127.0.0.1:8848
+  redis:
+    host: 127.0.0.1
 logging:
   level:
     com.atguigu.gulimall: debug

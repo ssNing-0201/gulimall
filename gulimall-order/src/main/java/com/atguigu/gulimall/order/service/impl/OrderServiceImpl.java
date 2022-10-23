@@ -7,6 +7,7 @@ import com.atguigu.common.to.mq.OrderTo;
 import com.atguigu.common.utils.R;
 import com.atguigu.common.vo.MemberRespVo;
 import com.atguigu.gulimall.order.entity.OrderItemEntity;
+import com.atguigu.gulimall.order.entity.PaymentInfoEntity;
 import com.atguigu.gulimall.order.enume.OrderStatusEnum;
 import com.atguigu.gulimall.order.feign.CartFeignService;
 import com.atguigu.gulimall.order.feign.MemberFeignService;
@@ -14,6 +15,7 @@ import com.atguigu.gulimall.order.feign.ProductFeignService;
 import com.atguigu.gulimall.order.feign.WmsFeignService;
 import com.atguigu.gulimall.order.interceptor.LoginUserInterceptor;
 import com.atguigu.gulimall.order.service.OrderItemService;
+import com.atguigu.gulimall.order.service.PaymentInfoService;
 import com.atguigu.gulimall.order.to.OrderCreateTo;
 import com.atguigu.gulimall.order.vo.*;
 import com.baomidou.mybatisplus.core.toolkit.IdWorker;
@@ -69,6 +71,8 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
     private OrderItemService orderItemService;
     @Resource
     private RabbitTemplate rabbitTemplate;
+    @Resource
+    private PaymentInfoService paymentInfoService;
 
     @Override
     public PageUtils queryPage(Map<String, Object> params) {
@@ -232,6 +236,47 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
         return payVo;
     }
 
+    @Override
+    public PageUtils queryPageWithItem(Map<String, Object> params) {
+        MemberRespVo memberRespVo = LoginUserInterceptor.loginUser.get();
+        IPage<OrderEntity> page = this.page(
+                new Query<OrderEntity>().getPage(params),
+                new QueryWrapper<OrderEntity>().eq("member_id",memberRespVo.getId()).orderByDesc("create_time")
+        );
+        List<OrderEntity> orderSn = page.getRecords().stream().map(order -> {
+            List<OrderItemEntity> order_sn = orderItemService.list(new QueryWrapper<OrderItemEntity>().eq("order_sn", order.getOrderSn()));
+            order.setItemEntities(order_sn);
+            return order;
+        }).collect(Collectors.toList());
+
+        page.setRecords(orderSn);
+        return new PageUtils(page);
+    }
+
+    /**
+     * 处理支付宝异步回调
+     * @return 返回success支付宝将停止发送回调消息
+     * @param vo
+     */
+    @Override
+    public String handlePayResult(PayAsyncVo vo) {
+        // 1、保存交易流水
+        PaymentInfoEntity infoEntity = new PaymentInfoEntity();
+        infoEntity.setAlipayTradeNo(vo.getTrade_no());
+        infoEntity.setOrderSn(vo.getOut_trade_no());
+        infoEntity.setPaymentStatus(vo.getTrade_status());
+        infoEntity.setCallbackTime(vo.getNotify_time());
+        paymentInfoService.save(infoEntity);
+        // 2、修改订单状态信息
+        if ("TRADE_SUCCESS".equals(vo.getTrade_status()) || "TRADE_FINISHED".equals(vo.getTrade_status())){
+            // 支付成功
+            String orderSn = vo.getOut_trade_no();
+            this.baseMapper.updateOrderStatus(orderSn,OrderStatusEnum.PAYED.getCode());
+        }
+        return "success";
+    }
+
+
     /**
      * 保存订单数据
      */
@@ -302,6 +347,8 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
     private OrderEntity buildOrder(OrderSubmitVo vo, String orderSn, MemberRespVo memberRespVo) {
         R fare = wmsFeignService.getFare(vo.getAddrId());
         OrderEntity entity = new OrderEntity();
+        entity.setCreateTime(new Date());
+
         entity.setMemberId(memberRespVo.getId());
         entity.setOrderSn(orderSn);
         String s = JSON.toJSONString(fare.get("data"));

@@ -26,6 +26,17 @@ public class OrderController {
     @Autowired
     private OrderService orderService;
 
+
+    /**
+     * 分页查询所有订单订单项
+     */
+    @PostMapping("/listWithItem")
+    //@RequiresPermissions("order:order:list")
+    public R listWithItem(@RequestBody Map<String, Object> params){
+        PageUtils page = orderService.queryPageWithItem(params);
+        return R.ok().put("page", page);
+    }
+
     @GetMapping("/status/{orderSn}")
     public R getOrderStatus(@PathVariable("orderSn") String orderSn){
         OrderEntity order = orderService.getOrderByOrderSn(orderSn);
@@ -42,8 +53,6 @@ public class OrderController {
 
         return R.ok().put("page", page);
     }
-
-
     /**
      * 信息
      */

@@ -18,7 +18,14 @@ spring:
         - id: search_route
           uri: lb://gulimall-search
           predicates:
-            - Path=/api/search
+            - Path=/api/search/**
+          filters:
+            - RewritePath=/api/(?<segment>.*),/$\{segment}
+
+        - id: coupon_route
+          uri: lb://gulimall-coupon
+          predicates:
+            - Path=/api/coupon/**
           filters:
             - RewritePath=/api/(?<segment>.*),/$\{segment}
 
@@ -75,12 +82,22 @@ spring:
         - id: gulimall-cart_route
           uri: lb://gulimall-cart
           predicates:
-              - Host=cart.gulimall.com
+            - Host=cart.gulimall.com
 
         - id: gulimall-order_route
           uri: lb://gulimall-order
           predicates:
-              - Host=order.gulimall.com
+            - Host=order.gulimall.com
+
+        - id: gulimall-member_route
+          uri: lb://gulimall-member
+          predicates:
+            - Host=member.gulimall.com
+
+        - id: gulimall-coupon_route
+          uri: lb://gulimall-coupon
+          predicates:
+            - Host=coupon.gulimall.com
 
 #         启动失败，注意缩进！！！
 #        - id: produce_route

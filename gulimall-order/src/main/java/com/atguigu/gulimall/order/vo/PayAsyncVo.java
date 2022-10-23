@@ -3,6 +3,8 @@ package com.atguigu.gulimall.order.vo;
 import lombok.Data;
 import lombok.ToString;
 
+import java.util.Date;
+
 @ToString
 @Data
 public class PayAsyncVo {
@@ -10,7 +12,7 @@ public class PayAsyncVo {
     private String gmt_create;
     private String charset;
     private String gmt_payment;
-    private String notify_time;
+    private Date notify_time;
     private String subject;
     private String sign;
     private String buyer_id;//支付者的id

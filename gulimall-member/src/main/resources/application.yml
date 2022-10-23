@@ -15,7 +15,13 @@ spring:
     nacos:
       discovery:
         server-addr: 127.0.0.1:8848
-
+  # 关闭thymeleaf缓存，修改效果可以实时显示
+  thymeleaf:
+    cache: false
+  session:
+    store-type: redis
+  redis:
+    host: 127.0.0.1
 mybatis-plus:
   mapper-locations: classpath:/mapper/**/*.xml
   global-config:
@@ -43,3 +49,7 @@ seata:
       namespace: d85ff827-c1c8-44e5-b3af-132a74392e27
       username: nacos
       password: nacos
+
+logging:
+  level:
+    com.atguigu.gulimall: debug

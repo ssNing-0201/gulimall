@@ -1,4 +1,4 @@
-package com.atguigu.gulimall.order.interceptor;
+package com.atguigu.gulimall.member.interceptor;
 
 
 import com.atguigu.common.constant.AuthServerContant;
@@ -19,15 +19,10 @@ public class LoginUserInterceptor implements HandlerInterceptor {
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
 
         String requestURI = request.getRequestURI();
-        boolean match = new AntPathMatcher().match("/order/order/status/**", requestURI);
-        boolean match1 = new AntPathMatcher().match("/payed/**", requestURI);
+        boolean match = new AntPathMatcher().match("/member/**", requestURI);
         if (match){
             return match;
         }
-        if (match1){
-            return match1;
-        }
-
 
         MemberRespVo attribute = (MemberRespVo) request.getSession().getAttribute(AuthServerContant.LOGIN_USER);
         if (attribute!=null){
