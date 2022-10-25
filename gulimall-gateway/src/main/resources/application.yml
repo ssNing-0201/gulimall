@@ -99,6 +99,11 @@ spring:
           predicates:
             - Host=coupon.gulimall.com
 
+        - id: gulimall-seckill_route
+          uri: lb://gulimall-seckill
+          predicates:
+            - Host=seckill.gulimall.com
+
 #         启动失败，注意缩进！！！
 #        - id: produce_route
 #          uri: lb://gulimail-product

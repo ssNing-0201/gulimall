@@ -44,11 +44,11 @@ public class SeckillSkuRelationEntity implements Serializable {
 	/**
 	 * ??ɱ????
 	 */
-	private BigDecimal seckillCount;
+	private Integer seckillCount;
 	/**
 	 * ÿ???޹??
 	 */
-	private BigDecimal seckillLimit;
+	private Integer seckillLimit;
 	/**
 	 * ???
 	 */

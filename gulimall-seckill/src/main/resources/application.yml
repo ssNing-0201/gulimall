@@ -1,0 +1,20 @@
+server:
+  port: 25000
+
+spring:
+  application:
+    name: gulimall-seckill
+  cloud:
+    nacos:
+      discovery:
+        server-addr: 127.0.0.1:8848
+  redis:
+    host: 127.0.0.1
+  task:
+    execution:
+      pool:
+        core-size: 5
+        max-size: 50
+logging:
+  level:
+    com.atguigu.gulimall: debug
