@@ -19,6 +19,7 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.util.*;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @Service
@@ -80,6 +81,26 @@ public class SeckillServiceImpl implements SeckillService {
             }
         }
         // 获取秒杀场次所有商品信息
+        return null;
+    }
+
+    @Override
+    public SeckillSkuRedisTo getSkuSeckillInfo(Long skuId) {
+        // 找到所有需要参与秒杀的key
+
+        BoundHashOperations<String, String, String> hashOps = stringRedisTemplate.boundHashOps(SKUKILL_CHCHE_PREFIX);
+        Set<String> keys = hashOps.keys();
+        if (keys != null && keys.size() > 0) {
+            String regx = "\\d_"+skuId;
+            for (String key:keys){
+                if (Pattern.matches(regx,key)){
+                    String s = hashOps.get(key);
+                    SeckillSkuRedisTo redisTo = JSON.parseObject(s, SeckillSkuRedisTo.class);
+                    redisTo.setRandomCode(null);
+                    return redisTo;
+                }
+            }
+        }
         return null;
     }
 
