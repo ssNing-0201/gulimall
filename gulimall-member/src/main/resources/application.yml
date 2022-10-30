@@ -26,6 +26,9 @@ spring:
     store-type: redis
   redis:
     host: 127.0.0.1
+feign:
+  sentinel:
+    enabled: true
 management:
   endpoints:
     web:

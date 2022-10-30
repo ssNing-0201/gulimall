@@ -19,6 +19,9 @@ spring:
     host: 127.0.0.1
   thymeleaf:
     cache: false
+feign:
+  sentinel:
+    enabled: true
 management:
   endpoints:
     web:

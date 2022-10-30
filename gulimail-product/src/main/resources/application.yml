@@ -78,3 +78,4 @@ seata:
 feign:
   sentinel:
     enabled: true
+

@@ -32,6 +32,9 @@ logging:
     cache: false
   session:
     store-type: redis
+feign:
+  sentinel:
+    enabled: true
 management:
   endpoints:
     web:

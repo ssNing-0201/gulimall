@@ -49,6 +49,9 @@ spring:
       transport:
         dashboard: localhost:8333
         port: 8719
+feign:
+  sentinel:
+    enabled: true
 management:
   endpoints:
     web:

@@ -23,6 +23,9 @@ spring:
   jackson:
     date-format: yyyy-MM-dd HH:mm:ss
 
+feign:
+  sentinel:
+    enabled: true
 management:
   endpoints:
     web:
