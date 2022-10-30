@@ -2,6 +2,8 @@ server:
   port: 30000
 
 spring:
+  main:
+    allow-circular-references: true
   application:
     name: gulimall-third-party
   cloud:

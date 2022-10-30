@@ -30,6 +30,10 @@
             <version>1.2.79</version>
         </dependency>
 
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
         <!--整合分布式缓存 cache-->
         <dependency>
             <groupId>org.springframework.boot</groupId>

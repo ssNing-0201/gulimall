@@ -14,30 +14,33 @@ public class MyMqConfig {
 
     // 队列
     @Bean // 加上 @Bean 容器中的这些都会自动创建(前提是mq中没有)
-    public Queue orderDelayQueue(){
+    public Queue orderDelayQueue() {
 
-        Map<String,Object> arguments = new HashMap<>();
-        arguments.put("x-dead-letter-exchange","order-event-exchange");
-        arguments.put("x-dead-letter-routing-key","order.releases.order");
-        arguments.put("x-message-ttl",60000);
-        Queue queue = new Queue("order.delay.queue", true, false, false,arguments);
+        Map<String, Object> arguments = new HashMap<>();
+        arguments.put("x-dead-letter-exchange", "order-event-exchange");
+        arguments.put("x-dead-letter-routing-key", "order.releases.order");
+        arguments.put("x-message-ttl", 60000);
+        Queue queue = new Queue("order.delay.queue", true, false, false, arguments);
         return queue;
     }
+
     // 队列
     @Bean
-    public Queue orderReleaseOrderQueue(){
+    public Queue orderReleaseOrderQueue() {
         Queue queue = new Queue("order.release.order.queue", true, false, false);
         return queue;
     }
+
     // 交换机
     @Bean
-    public Exchange orderEventExchange(){
+    public Exchange orderEventExchange() {
         TopicExchange topicExchange = new TopicExchange("order-event-exchange", true, false);
         return topicExchange;
     }
+
     // 绑定关系
     @Bean
-    public Binding orderCreateOrderBinding(){
+    public Binding orderCreateOrderBinding() {
         Binding binding = new Binding("order.delay.queue",
                 Binding.DestinationType.QUEUE,
                 "order-event-exchange",
@@ -45,20 +48,22 @@ public class MyMqConfig {
                 null);
         return binding;
     }
+
     // 绑定关系
     @Bean
-    public Binding orderReleaseOrderBinding(){
+    public Binding orderReleaseOrderBinding() {
         Binding binding = new Binding("order.release.order.queue",
                 Binding.DestinationType.QUEUE,
                 "order-event-exchange",
                 "order.releases.order", null);
         return binding;
     }
+
     /**
      * 订单释放直接和库存释放进行绑定。
      */
     @Bean
-    public Binding orderReleaseOtherBinding(){
+    public Binding orderReleaseOtherBinding() {
         Binding binding = new Binding("stock.release.stock.queue",
                 Binding.DestinationType.QUEUE,
                 "order-event-exchange",
@@ -67,4 +72,19 @@ public class MyMqConfig {
         return binding;
     }
 
+    // ---------------------------------秒杀功能消息队列----------------------------------------
+
+    @Bean
+    public Queue orderSeckillOrderQueue() {
+        Queue queue = new Queue("order.seckill.order.queue", true, false, false);
+        return queue;
+    }
+    @Bean
+    public Binding orderSeckillOrderQueueBinding(){
+        Binding binding = new Binding("order.seckill.order.queue",
+                Binding.DestinationType.QUEUE,
+                "order-event-exchange",
+                "order.seckill.order", null);
+        return binding;
+    }
 }

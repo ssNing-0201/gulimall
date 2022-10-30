@@ -2,6 +2,9 @@ server:
   port: 3090
 
 spring:
+  main:
+    allow-circular-references: true
+
   application:
     name: gulimall-search
 
@@ -13,7 +16,16 @@ spring:
     nacos:
       discovery:
         server-addr: 127.0.0.1:8848
+    sentinel:
+      transport:
+        dashboard: localhost:8333
+        port: 8719
   redis:
     host: 127.0.0.1
   session:
     store-type: redis
+management:
+  endpoints:
+    web:
+      exposure:
+        include: '*'

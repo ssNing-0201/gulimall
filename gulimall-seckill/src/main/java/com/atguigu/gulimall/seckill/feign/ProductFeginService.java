@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 
-@FeignClient("gulimail-product")
+@FeignClient(value = "gulimail-product")
 public interface ProductFeginService {
 
     @RequestMapping("/product/skuinfo/info/{skuId}")

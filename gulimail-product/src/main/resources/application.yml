@@ -2,6 +2,8 @@ server:
   port: 10000
 
 spring:
+  main:
+    allow-circular-references: true
   application:
     name: gulimail-product
   datasource:
@@ -13,8 +15,11 @@ spring:
     nacos:
       discovery:
         server-addr: 127.0.0.1:8848
-  main:
-    allow-circular-references: true
+    sentinel:
+      transport:
+        dashboard: localhost:8333
+        port: 8719
+
   jackson:
     date-format: yyyy-MM-dd HH:mm:ss
     time-zone: GMT-8
@@ -28,6 +33,12 @@ spring:
   # 指定 Spring session 使用 redis 存储数据
   session:
     store-type: redis
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: '*'
 
 
 
@@ -64,4 +75,6 @@ seata:
       namespace: d85ff827-c1c8-44e5-b3af-132a74392e27
       username: nacos
       password: nacos
-
+feign:
+  sentinel:
+    enabled: true

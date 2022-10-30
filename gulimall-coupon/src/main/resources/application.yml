@@ -44,3 +44,13 @@ seata:
 spring:
   main:
     allow-circular-references: true
+  cloud:
+    sentinel:
+      transport:
+        dashboard: localhost:8333
+        port: 8719
+management:
+  endpoints:
+    web:
+      exposure:
+        include: '*'

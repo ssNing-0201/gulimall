@@ -11,7 +11,10 @@ spring:
     nacos:
       discovery:
         server-addr: 127.0.0.1:8848
-
+    sentinel:
+      transport:
+        dashboard: localhost:8333
+        port: 8719
   thymeleaf:
     cache: false
 
@@ -24,6 +27,11 @@ spring:
   session:
     store-type: redis
 
+management:
+  endpoints:
+    web:
+      exposure:
+        include: '*'
 seata:
   enabled: true
   enable-auto-data-source-proxy: true
